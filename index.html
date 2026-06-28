@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>吉他工坊｜專業吉他批發・零售・維修</title>
+  <meta name="description" content="吉他工坊提供 DADARWOOD、ANISA、EITMOSS 等吉他品牌介紹、產品規格、選琴建議與批發合作資訊。" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo">🎸</div>
+      <div>
+        <h1>吉他工坊</h1>
+        <p>Guitar Workshop</p>
+      </div>
+    </div>
+    <nav>
+      <a href="#products">產品</a>
+      <a href="#ai">AI 選琴</a>
+      <a href="#dealer">批發合作</a>
+      <a href="#contact">聯絡我們</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-text">
+      <p class="eyebrow">專業吉他批發｜零售｜維修｜品牌代理</p>
+      <h2>幫每一位演奏者，找到適合自己的吉他。</h2>
+      <p>從初學入門、進階演奏、旅行吉他到舞台彈唱，吉他工坊提供清楚規格、實用建議與售後服務。</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#ai">開始 AI 選琴</a>
+        <a class="btn" href="#products">瀏覽產品</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <h3>網站重點</h3>
+      <ul>
+        <li>每把吉他獨立產品頁</li>
+        <li>可產生 QR Code 給業務拜訪使用</li>
+        <li>AI 根據預算、桶身、木材推薦產品</li>
+        <li>未來可升級接 ChatGPT API</li>
+      </ul>
+    </div>
+  </section>
+
+  <main>
+    <section id="products" class="section">
+      <div class="section-title">
+        <p class="eyebrow">Products</p>
+        <h2>產品系列</h2>
+      </div>
+      <div class="filters">
+        <button data-filter="all" class="active">全部</button>
+        <button data-filter="DADARWOOD">DADARWOOD</button>
+        <button data-filter="ANISA">ANISA</button>
+        <button data-filter="EITMOSS">EITMOSS</button>
+      </div>
+      <div id="productGrid" class="product-grid"></div>
+    </section>
+
+    <section id="ai" class="section ai-section">
+      <div class="section-title">
+        <p class="eyebrow">AI Guitar Advisor</p>
+        <h2>AI 吉他顧問</h2>
+        <p>輸入需求，例如：「預算 8000」、「我要旅行吉他」、「D20 跟 D30 差在哪」。</p>
+      </div>
+      <div class="chat-box">
+        <div id="chatLog" class="chat-log">
+          <div class="msg bot">你好，我是吉他工坊 AI 顧問。請告訴我你的預算、用途或想比較的型號。</div>
+        </div>
+        <div class="chat-input">
+          <input id="userInput" placeholder="例如：我預算 8000，要初學吉他" />
+          <button id="sendBtn">送出</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="dealer" class="section split">
+      <div>
+        <p class="eyebrow">Dealer</p>
+        <h2>批發合作</h2>
+        <p>歡迎樂器行、教室、音樂工作室洽詢合作。可提供品牌型錄、產品規格、批發方案與售後支援。</p>
+      </div>
+      <div class="info-card">
+        <h3>合作內容</h3>
+        <ul>
+          <li>吉他批發</li>
+          <li>品牌代理</li>
+          <li>產品型錄</li>
+          <li>售後維修與調整</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact">
+      <p class="eyebrow">Contact</p>
+      <h2>聯絡我們</h2>
+      <p>請將這裡改成你的 LINE、電話、Email、地址或蝦皮賣場連結。</p>
+      <a class="btn primary" href="https://shopee.tw/nana.select" target="_blank" rel="noopener">前往蝦皮賣場</a>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 吉他工坊 Guitar Workshop. All rights reserved.</p>
+  </footer>
+
+  <script src="products.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
