@@ -1,16 +1,1 @@
-export default function Contact() {
-  return (
-    <section className="contact" id="contact">
-      <p className="eyebrow">Contact</p>
-      <h2>聯絡吉他工坊</h2>
-      <p>之後可以把 LINE、電話、地址、蝦皮賣場連結替換成正式資料。</p>
-
-      <div className="contact-grid">
-        <span>LINE：尚未設定</span>
-        <span>電話：尚未設定</span>
-        <span>地址：尚未設定</span>
-        <span>蝦皮：尚未設定</span>
-      </div>
-    </section>
-  );
-}
+export default function Contact(){return <section className="contact" id="contact"><p className="eyebrow">Contact</p><h2>聯絡吉他工坊</h2><p>之後可以把 LINE、電話、地址、蝦皮賣場連結替換成正式資料。</p><div className="contact-grid"><span>LINE：尚未設定</span><span>電話：尚未設定</span><span>地址：尚未設定</span><span>蝦皮：尚未設定</span></div></section>;}

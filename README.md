@@ -1,19 +1,13 @@
-# 吉他工坊 React 正式版 V1
+# 吉他工坊 React V2
 
-這是「吉他工坊 Guitar Workshop」React 官網第一版。
+這是 React 正式版 V2。
 
-## 上線方式
+## 部署
+1. 用 GitHub Desktop 覆蓋專案資料夾。
+2. Commit。
+3. Push origin。
+4. GitHub → Settings → Pages → Source 選 GitHub Actions。
+5. GitHub → Actions 等綠勾。
 
-1. 把所有檔案上傳到 GitHub `guitar-workshop` 專案。
-2. 到 Settings → Pages。
-3. Source 改成 GitHub Actions。
-4. 回到 Actions 等部署完成。
-5. 網站網址會是：https://guitarworkshop.github.io/guitar-workshop/
-
-## 修改產品資料
-
-產品資料在：
-
-`src/data/products.js`
-
-之後新增產品，只要新增一筆資料即可。
+如果 `.github` 沒有被上傳：
+到 GitHub 網頁 Add file → Create new file，檔名輸入 `.github/workflows/deploy.yml`，內容複製 `DEPLOY_YML_COPY.txt`。
