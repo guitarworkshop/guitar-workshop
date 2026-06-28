@@ -1,112 +1,35 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>吉他工坊｜專業吉他批發・零售・維修</title>
-  <meta name="description" content="吉他工坊提供 DADARWOOD、ANISA、EITMOSS 等吉他品牌介紹、產品規格、選琴建議與批發合作資訊。" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>吉他工坊 Guitar Workshop</title>
+  <meta name="description" content="吉他工坊｜專業吉他品牌、產品介紹與 AI 選琴顧問。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand">
-      <div class="logo">🎸</div>
-      <div>
-        <h1>吉他工坊</h1>
-        <p>Guitar Workshop</p>
-      </div>
-    </div>
-    <nav>
-      <a href="#products">產品</a>
-      <a href="#ai">AI 選琴</a>
-      <a href="#dealer">批發合作</a>
-      <a href="#contact">聯絡我們</a>
-    </nav>
+  <header class="nav">
+    <a class="logo" href="#top"><span class="logo-icon">𝄞</span><span><b>吉他工坊</b><small>GUITAR WORKSHOP</small></span></a>
+    <nav class="menu"><a href="#top">首頁</a><a href="#story">品牌故事</a><a href="#collections">產品中心</a><a href="#advisor">AI 選琴顧問</a><a href="#wholesale">批發合作</a><a href="#contact">聯絡我們</a></nav>
+    <div class="nav-icons"><span>⌕</span><span>☰</span></div>
   </header>
-
-  <section class="hero">
-    <div class="hero-text">
-      <p class="eyebrow">專業吉他批發｜零售｜維修｜品牌代理</p>
-      <h2>幫每一位演奏者，找到適合自己的吉他。</h2>
-      <p>從初學入門、進階演奏、旅行吉他到舞台彈唱，吉他工坊提供清楚規格、實用建議與售後服務。</p>
-      <div class="hero-actions">
-        <a class="btn primary" href="#ai">開始 AI 選琴</a>
-        <a class="btn" href="#products">瀏覽產品</a>
-      </div>
-    </div>
-    <div class="hero-card">
-      <h3>網站重點</h3>
-      <ul>
-        <li>每把吉他獨立產品頁</li>
-        <li>可產生 QR Code 給業務拜訪使用</li>
-        <li>AI 根據預算、桶身、木材推薦產品</li>
-        <li>未來可升級接 ChatGPT API</li>
-      </ul>
-    </div>
-  </section>
-
-  <main>
-    <section id="products" class="section">
-      <div class="section-title">
-        <p class="eyebrow">Products</p>
-        <h2>產品系列</h2>
-      </div>
-      <div class="filters">
-        <button data-filter="all" class="active">全部</button>
-        <button data-filter="DADARWOOD">DADARWOOD</button>
-        <button data-filter="ANISA">ANISA</button>
-        <button data-filter="EITMOSS">EITMOSS</button>
-      </div>
-      <div id="productGrid" class="product-grid"></div>
+  <main id="top">
+    <section class="hero">
+      <div class="hero-content"><p class="label">GUITAR WORKSHOP</p><h1>吉他工坊</h1><h2>Every Guitar Has Its Story.</h2><p class="hero-sub">用心挑選每一把吉他，讓音樂成為生活的一部分。</p><a class="btn gold" href="#collections">探索系列 <span>→</span></a></div>
+      <div class="hero-guitar" aria-hidden="true"><div class="guitar-neck"></div><div class="guitar-body"><div class="hole"></div><div class="bridge"></div></div></div>
+      <div class="scroll-mark">↓</div>
     </section>
-
-    <section id="ai" class="section ai-section">
-      <div class="section-title">
-        <p class="eyebrow">AI Guitar Advisor</p>
-        <h2>AI 吉他顧問</h2>
-        <p>輸入需求，例如：「預算 8000」、「我要旅行吉他」、「D20 跟 D30 差在哪」。</p>
-      </div>
-      <div class="chat-box">
-        <div id="chatLog" class="chat-log">
-          <div class="msg bot">你好，我是吉他工坊 AI 顧問。請告訴我你的預算、用途或想比較的型號。</div>
-        </div>
-        <div class="chat-input">
-          <input id="userInput" placeholder="例如：我預算 8000，要初學吉他" />
-          <button id="sendBtn">送出</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="dealer" class="section split">
-      <div>
-        <p class="eyebrow">Dealer</p>
-        <h2>批發合作</h2>
-        <p>歡迎樂器行、教室、音樂工作室洽詢合作。可提供品牌型錄、產品規格、批發方案與售後支援。</p>
-      </div>
-      <div class="info-card">
-        <h3>合作內容</h3>
-        <ul>
-          <li>吉他批發</li>
-          <li>品牌代理</li>
-          <li>產品型錄</li>
-          <li>售後維修與調整</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="contact" class="section contact">
-      <p class="eyebrow">Contact</p>
-      <h2>聯絡我們</h2>
-      <p>請將這裡改成你的 LINE、電話、Email、地址或蝦皮賣場連結。</p>
-      <a class="btn primary" href="https://shopee.tw/nana.select" target="_blank" rel="noopener">前往蝦皮賣場</a>
-    </section>
+    <section class="collections" id="collections"><div class="section-title"><p class="label">OUR COLLECTIONS</p><h2>探索我們的系列</h2></div><div class="collection-grid"><article class="collection-card dark"><div><h3>DADARWOOD</h3><h4>經典工藝系列</h4><p>經典木材搭配細緻工藝，創造溫暖飽滿的聲音。</p><a href="#products">探索系列 →</a></div></article><article class="collection-card warm"><div><h3>ANISA</h3><h4>進階演奏系列</h4><p>為演奏而生，展現更豐富的音色層次。</p><a href="#products">探索系列 →</a></div></article><article class="collection-card forest"><div><h3>EITMOSS</h3><h4>旅行吉他系列</h4><p>輕巧便攜，隨時隨地享受音樂的美好。</p><a href="#products">探索系列 →</a></div></article></div></section>
+    <section class="advisor-band" id="advisor"><div class="advisor-photo"></div><div class="advisor-copy"><p class="label">AI GUITAR ADVISOR</p><h2>不知道怎麼選？<br>讓 AI 幫你找到最適合的吉他</h2><div class="advisor-points"><span>了解需求</span><span>智能推薦</span><span>安心選擇</span></div></div><div class="advisor-box"><div class="ai-orb">AI</div><p>AI GUITAR ADVISOR</p><textarea id="question" placeholder="例如：預算 8000、初學、自彈自唱"></textarea><button id="askBtn" class="btn gold">開始諮詢 →</button><div id="answer" class="answer">輸入需求後，這裡會顯示推薦結果。</div></div></section>
+    <section class="products" id="products"><div class="section-title row"><div><p class="label">FEATURED GUITARS</p><h2>精選吉他</h2></div><a class="view-all" href="#contact">查看全部產品 →</a></div><div class="product-row" id="productGrid"></div></section>
+    <section class="about" id="story"><div class="about-image"></div><div class="about-copy"><p class="label">ABOUT US</p><h2>關於吉他工坊</h2><p>我們專注於挑選高品質的吉他，並由專業技師調整每一把琴的手感與狀態，讓初學者、演奏者與店家都能找到適合的樂器。</p><a class="btn outline" href="#contact">了解更多 →</a></div><div class="about-list"><p><b>專業調整</b><br>出貨前專業技師調整</p><p><b>品牌檢驗</b><br>每把琴細節確認</p><p><b>售後服務</b><br>完整保固與售後支援</p></div></section>
+    <section class="wholesale" id="wholesale"><p class="label">WHOLESALE</p><h2>批發合作</h2><p>歡迎樂器行、音樂教室、工作室洽詢批發合作。可提供產品介紹、型錄、售後服務與專業建議。</p></section>
+    <section class="contact" id="contact"><h2>聯絡我們</h2><p>LINE、電話、地址、蝦皮連結之後可以直接替換成你的正式資料。</p><div class="contact-grid"><span>LINE：尚未設定</span><span>電話：尚未設定</span><span>地址：尚未設定</span><span>蝦皮：尚未設定</span></div></section>
   </main>
-
-  <footer>
-    <p>© 吉他工坊 Guitar Workshop. All rights reserved.</p>
-  </footer>
-
-  <script src="products.js"></script>
-  <script src="app.js"></script>
+  <footer><div class="logo"><span class="logo-icon">𝄞</span><span><b>吉他工坊</b><small>GUITAR WORKSHOP</small></span></div><p>© 2026 Guitar Workshop. All Rights Reserved.</p></footer>
+  <script src="products.js"></script><script src="app.js"></script>
 </body>
 </html>
