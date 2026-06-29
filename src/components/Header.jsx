@@ -2,11 +2,11 @@ import { Search, Menu } from "lucide-react";
 
 export default function Header() {
   const links = [
-    ["Collections", "#collections"],
-    ["Products", "#products"],
-    ["AI Advisor", "#advisor"],
-    ["Wholesale", "#wholesale"],
-    ["Contact", "#contact"]
+    ["品牌系列", "#collections"],
+    ["所有產品", "#products"],
+    ["AI 選琴顧問", "#advisor"],
+    ["樂器行合作", "#wholesale"],
+    ["聯絡我們", "#contact"]
   ];
 
   return (
