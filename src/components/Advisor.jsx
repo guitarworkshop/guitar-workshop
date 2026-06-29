@@ -1,34 +1,12 @@
 import { useMemo, useState } from "react";
 import { products } from "../data/products";
 
-const questions = {
-  firstGuitar: [
-    ["yes", "第一次買吉他"],
-    ["no", "不是第一把，想升級"]
-  ],
-  budget: [
-    ["under8000", "8,000 以下"],
-    ["8000to15000", "8,000～15,000"],
-    ["15000to25000", "15,000～25,000"],
-    ["25000up", "25,000 以上"]
-  ],
-  use: [
-    ["singing", "自彈自唱"],
-    ["fingerstyle", "Fingerstyle / 演奏"],
-    ["practice", "日常練習"],
-    ["live", "直播 / 演出"]
-  ],
-  sound: [
-    ["warm", "溫暖厚實"],
-    ["bright", "明亮清晰"],
-    ["balanced", "均衡耐聽"],
-    ["notSure", "我還不確定"]
-  ],
-  pickup: [
-    ["no", "暫時不需要拾音器"],
-    ["yes", "需要拾音器"]
-  ]
-};
+const starterMessages = [
+  "我第一次買吉他，預算一萬五，想自彈自唱",
+  "我預算八千，想買第一把吉他",
+  "我已經有一把面單，想升級",
+  "我需要直播演出，可以推薦嗎？"
+];
 
 function priceText(price) {
   return price ? `NT$ ${price.toLocaleString()}` : "歡迎洽詢";
@@ -38,154 +16,173 @@ function productText(product) {
   return `${product.brand} ${product.model} ${product.category} ${product.subtitle} ${product.tone} ${product.useCase} ${product.sellingPoints?.join(" ")}`.toLowerCase();
 }
 
-function scoreProduct(product, form) {
+function parseUser(text) {
+  const input = text.toLowerCase();
+
+  let budget = null;
+  const match = input.match(/(\d{4,6})/);
+  if (match) budget = Number(match[1]);
+
+  const isFirst = input.includes("第一次") || input.includes("第一把") || input.includes("新手") || input.includes("初學");
+  const isUpgrade = input.includes("升級") || input.includes("換琴") || input.includes("第二把");
+  const needsPickup = input.includes("拾音") || input.includes("直播") || input.includes("演出") || input.includes("接音箱");
+
+  let use = "notSure";
+  if (input.includes("彈唱") || input.includes("唱歌")) use = "singing";
+  if (input.includes("finger") || input.includes("演奏") || input.includes("指彈")) use = "fingerstyle";
+  if (input.includes("練習")) use = "practice";
+  if (input.includes("直播") || input.includes("演出")) use = "live";
+
+  let sound = "notSure";
+  if (input.includes("溫暖") || input.includes("厚") || input.includes("低頻")) sound = "warm";
+  if (input.includes("亮") || input.includes("清晰") || input.includes("穿透")) sound = "bright";
+  if (input.includes("均衡") || input.includes("耐聽")) sound = "balanced";
+
+  return { budget, isFirst, isUpgrade, needsPickup, use, sound, raw: text };
+}
+
+function scoreProduct(product, info) {
   const text = productText(product);
   let score = 0;
 
-  if (form.budget === "under8000" && product.price && product.price <= 8000) score += 6;
-  if (form.budget === "8000to15000" && product.price && product.price >= 7000 && product.price <= 16000) score += 6;
-  if (form.budget === "15000to25000" && (!product.price || (product.price >= 12000 && product.price <= 26000))) score += 6;
-  if (form.budget === "25000up" && (!product.price || product.price >= 18000)) score += 5;
+  if (info.budget) {
+    if (product.price) {
+      if (product.price <= info.budget) score += 8;
+      if (product.price > info.budget && product.price <= info.budget * 1.25) score += 4;
+      if (product.price > info.budget * 1.4) score -= 4;
+    } else {
+      score += info.budget >= 15000 ? 4 : 0;
+    }
+  }
 
-  if (form.firstGuitar === "yes" && (text.includes("初學") || text.includes("入門") || text.includes("彈唱") || text.includes("面單"))) score += 4;
-  if (form.firstGuitar === "no" && (text.includes("全單") || text.includes("演奏") || text.includes("進階"))) score += 5;
+  if (info.isFirst && (text.includes("初學") || text.includes("彈唱") || text.includes("面單"))) score += 5;
+  if (info.isUpgrade && (text.includes("全單") || text.includes("演奏") || text.includes("進階"))) score += 7;
 
-  if (form.use === "singing" && (text.includes("彈唱") || text.includes("溫暖"))) score += 5;
-  if (form.use === "fingerstyle" && (text.includes("演奏") || text.includes("層次") || text.includes("全單") || text.includes("清晰"))) score += 5;
-  if (form.use === "practice" && (text.includes("練習") || text.includes("初學"))) score += 4;
-  if (form.use === "live" && (text.includes("直播") || text.includes("演出") || text.includes("拾音器"))) score += 7;
+  if (info.use === "singing" && (text.includes("彈唱") || text.includes("溫暖") || text.includes("桃花"))) score += 6;
+  if (info.use === "fingerstyle" && (text.includes("演奏") || text.includes("層次") || text.includes("清晰") || text.includes("全單"))) score += 6;
+  if (info.use === "practice" && (text.includes("練習") || text.includes("初學"))) score += 4;
+  if (info.use === "live" && (text.includes("直播") || text.includes("演出") || text.includes("拾音器"))) score += 8;
 
-  if (form.sound === "warm" && (text.includes("溫暖") || text.includes("桃花") || text.includes("低頻"))) score += 4;
-  if (form.sound === "bright" && (text.includes("明亮") || text.includes("清晰") || text.includes("雲杉"))) score += 4;
-  if (form.sound === "balanced" && (text.includes("均衡") || text.includes("相思") || text.includes("耐聽"))) score += 4;
+  if (info.sound === "warm" && (text.includes("溫暖") || text.includes("桃花") || text.includes("低頻"))) score += 4;
+  if (info.sound === "bright" && (text.includes("明亮") || text.includes("清晰") || text.includes("雲杉"))) score += 4;
+  if (info.sound === "balanced" && (text.includes("均衡") || text.includes("相思") || text.includes("耐聽"))) score += 4;
 
-  if (form.pickup === "yes" && text.includes("拾音器")) score += 8;
-  if (form.pickup === "no" && !text.includes("拾音器")) score += 2;
+  if (info.needsPickup && text.includes("拾音器")) score += 8;
+  if (!info.needsPickup && !text.includes("拾音器")) score += 2;
 
   return score;
 }
 
-function brainIntro(form) {
-  if (form.firstGuitar === "yes") {
-    if (form.budget === "under8000") {
-      return "第一次買吉他，如果只是想先體驗，可以從預算較低的琴開始。不過我還是會建議你了解合板和面單的差別，因為如果會認真練習，面單通常比較划算，也比較能陪你用久一點。";
-    }
-    if (form.budget === "8000to15000") {
-      return "第一次買吉他，預算到 8,000～15,000，我通常會建議直接看面單。這個區間重點不是追品牌，而是看材料、做工和你喜歡的聲音。";
-    }
-    return "第一次買吉他，如果預算已經來到 15,000 以上，我會開始幫你比較高階面單和全單。能買到不錯的全單時，我通常會優先帶你比較全單，因為整體聲音和共鳴會更完整。";
+function buildBrainAnswer(info, picks) {
+  const lines = [];
+
+  if (!info.raw.trim()) {
+    return "你可以直接告訴我：這是不是第一把吉他、預算大約多少、主要用途是彈唱還是演奏。我會用吉他工坊的選琴邏輯幫你縮小到幾把適合比較的琴。";
   }
 
-  return "如果你已經有一把吉他，想升級時我會先看這次升級有沒有價值。同價位通常不是升級，只是音色取向不同；如果要換琴，我會希望你換到音質和演奏體驗都有明顯提升的等級。";
+  if (info.isFirst) {
+    lines.push("如果是第一次買吉他，我不會急著只推薦某一個型號，會先讓你知道合板、面單和全單的差別。");
+    if (info.budget && info.budget >= 8000) {
+      lines.push("以你的預算來看，我會比較建議直接看面單以上，因為如果會認真練習，面單通常會比合板更划算，也能陪你用比較久。");
+    }
+    if (info.budget && info.budget >= 15000) {
+      lines.push("你的預算已經接近可以比較高階面單或部分全單的區間，所以我會建議不要只看低價款，而是把預算花在聲音和做工更有價值的琴上。");
+    }
+  } else if (info.isUpgrade) {
+    lines.push("如果是想升級，我會先看這次換琴有沒有明顯價值。同價位很多時候不是升級，只是音色取向不同。");
+    lines.push("如果要換，我會希望你往音質、共鳴和演奏體驗都有明顯提升的等級看。");
+  } else {
+    lines.push("我會先幫你把需求縮小，而不是一次丟很多把琴給你。買吉他最好兩把兩把比較，會比較容易聽出差異。");
+  }
+
+  if (info.needsPickup) {
+    lines.push("你有直播或演出需求，所以我會把有拾音器、適合接音箱的款式排前面。");
+  } else {
+    lines.push("如果暫時沒有演出需求，我會建議先把預算放在吉他本身，拾音器之後有需要再加裝也可以。");
+  }
+
+  lines.push("依你目前的描述，我會建議你先比較下面這幾把：");
+
+  picks.forEach((p, i) => {
+    lines.push(`${i + 1}. ${p.brand} ${p.model}（${priceText(p.price)}）`);
+    lines.push(`   ${makeReason(p, info)}`);
+  });
+
+  lines.push("最後還是建議你用耳朵比較，甚至盲測。不是問哪一把比較好，而是找哪一把的聲音你比較喜歡。");
+
+  return lines.join("\\n");
 }
 
-function reasonFor(product, form) {
-  const reasons = [];
+function makeReason(product, info) {
   const text = productText(product);
-
-  if (form.use === "singing" && (text.includes("彈唱") || text.includes("溫暖"))) reasons.push("適合自彈自唱，聲音方向比較容易融入人聲。");
-  if (form.use === "fingerstyle" && (text.includes("演奏") || text.includes("層次") || text.includes("清晰"))) reasons.push("音色層次比較清楚，適合演奏或更細緻的彈奏。");
-  if (form.pickup === "yes" && text.includes("拾音器")) reasons.push("有拾音器，適合直播、演出或接音箱使用。");
-  if (form.pickup === "no" && !text.includes("拾音器")) reasons.push("如果暫時沒有演出需求，可以把預算放在吉他本身。");
-  if (form.sound === "warm" && (text.includes("溫暖") || text.includes("桃花"))) reasons.push("音色偏溫暖，適合喜歡厚實、耐聽聲音的人。");
-  if (form.sound === "bright" && (text.includes("明亮") || text.includes("雲杉") || text.includes("清晰"))) reasons.push("音色比較明亮清晰，適合喜歡穿透力的人。");
-  if (!reasons.length) reasons.push("這把琴和你的需求方向接近，可以列入比較。");
-
-  return reasons.slice(0, 3);
-}
-
-function notRecommendNote(form) {
-  if (form.budget === "8000to15000") {
-    return "我不會優先推薦太低價的合板，因為你的預算已經可以看面單，把預算放在琴本身會更有長期價值。";
-  }
-  if (form.budget === "15000to25000" || form.budget === "25000up") {
-    return "如果你的預算已經能碰到全單或更高階產品，我不會只停留在同價位面單，而會先看這次升級有沒有明顯價值。";
-  }
-  return "如果只是想先體驗，低預算可以接受；但如果確定會練，面單會是更划算的選擇。";
+  if (info.needsPickup && text.includes("拾音器")) return "適合直播、演出或接音箱使用。";
+  if (info.use === "singing" && (text.includes("溫暖") || text.includes("彈唱"))) return "聲音方向適合自彈自唱，會比較容易融入人聲。";
+  if (info.use === "fingerstyle" && (text.includes("層次") || text.includes("清晰") || text.includes("全單"))) return "音色層次比較清楚，適合演奏或更細緻的彈奏。";
+  if (info.sound === "warm" && text.includes("桃花")) return "桃花心木聲音偏溫暖，適合喜歡耐聽音色的人。";
+  if (info.sound === "bright" && text.includes("雲杉")) return "雲杉聲音比較明亮清晰，適合喜歡穿透感的人。";
+  return "整體條件和你的需求接近，可以列入比較。";
 }
 
 export default function Advisor() {
-  const [form, setForm] = useState({
-    firstGuitar: "yes",
-    budget: "8000to15000",
-    use: "singing",
-    sound: "notSure",
-    pickup: "no"
-  });
+  const [input, setInput] = useState("我第一次買吉他，預算一萬五，想自彈自唱");
+  const [submitted, setSubmitted] = useState("我第一次買吉他，預算一萬五，想自彈自唱");
 
-  const recommendations = useMemo(() => {
+  const info = useMemo(() => parseUser(submitted), [submitted]);
+
+  const picks = useMemo(() => {
     return [...products]
-      .map((product) => ({ ...product, score: scoreProduct(product, form) }))
+      .map((product) => ({ ...product, score: scoreProduct(product, info) }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 3);
-  }, [form]);
+  }, [info]);
 
-  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const answer = useMemo(() => buildBrainAnswer(info, picks), [info, picks]);
+
+  const send = () => {
+    setSubmitted(input);
+  };
 
   return (
-    <section className="gw-ai" id="advisor">
-      <div className="gw-ai-head">
-        <p className="eyebrow">GW Brain Alpha</p>
+    <section className="chat-ai" id="advisor">
+      <div className="chat-ai-title">
+        <p className="eyebrow">Guitar Workshop Advisor</p>
         <h2>吉他工坊選琴顧問</h2>
-        <p>先了解你的需求，再用吉他工坊的選琴邏輯推薦適合比較的產品。</p>
+        <p>直接說出你的需求，我會用吉他工坊的選琴邏輯，從目前產品裡推薦適合比較的琴。</p>
       </div>
 
-      <div className="gw-ai-layout">
-        <div className="gw-ai-questions">
-          <Question title="這是你的第一把吉他嗎？" name="firstGuitar" value={form.firstGuitar} options={questions.firstGuitar} onChange={update} />
-          <Question title="你的預算大約是？" name="budget" value={form.budget} options={questions.budget} onChange={update} />
-          <Question title="主要用途？" name="use" value={form.use} options={questions.use} onChange={update} />
-          <Question title="你喜歡什麼聲音？" name="sound" value={form.sound} options={questions.sound} onChange={update} />
-          <Question title="是否需要拾音器？" name="pickup" value={form.pickup} options={questions.pickup} onChange={update} />
+      <div className="chat-window">
+        <div className="message ai">
+          <strong>吉他工坊</strong>
+          <p>你好，直接告訴我你的預算、用途、是不是第一把吉他，我會幫你縮小到幾把適合比較的琴。</p>
         </div>
 
-        <div className="gw-ai-result">
-          <div className="brain-box">
-            <p className="eyebrow">選琴邏輯</p>
-            <p>{brainIntro(form)}</p>
-            <p>{notRecommendNote(form)}</p>
-          </div>
-
-          <h3>我建議你先比較這幾把</h3>
-
-          {recommendations.map((product, index) => (
-            <article className="ai-product" key={product.id}>
-              <div className="ai-rank">#{index + 1}</div>
-              <div>
-                <strong>{product.brand} {product.model}</strong>
-                <span>{product.category}｜{priceText(product.price)}</span>
-                <ul>
-                  {reasonFor(product, form).map((reason) => <li key={reason}>{reason}</li>)}
-                </ul>
-              </div>
-            </article>
+        <div className="starter-row">
+          {starterMessages.map((text) => (
+            <button key={text} type="button" onClick={() => { setInput(text); setSubmitted(text); }}>
+              {text}
+            </button>
           ))}
+        </div>
 
-          <div className="brain-tip">
-            真正選琴時，我會建議兩把兩把比較；如果可以盲測，通常更容易找到你真正喜歡的聲音。
-          </div>
+        <div className="message user">
+          <strong>你</strong>
+          <p>{submitted}</p>
+        </div>
+
+        <div className="message ai answer">
+          <strong>吉他工坊選琴顧問</strong>
+          <pre>{answer}</pre>
+        </div>
+
+        <div className="chat-input">
+          <textarea
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder="例如：我第一次買吉他，預算一萬五，想自彈自唱"
+          />
+          <button type="button" onClick={send}>送出</button>
         </div>
       </div>
     </section>
-  );
-}
-
-function Question({ title, name, value, options, onChange }) {
-  return (
-    <div className="gw-question">
-      <h3>{title}</h3>
-      <div className="gw-options">
-        {options.map(([optionValue, label]) => (
-          <button
-            type="button"
-            key={optionValue}
-            className={value === optionValue ? "selected" : ""}
-            onClick={() => onChange(name, optionValue)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
