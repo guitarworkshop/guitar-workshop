@@ -73,12 +73,22 @@ function scoreProduct(product, info) {
   return score;
 }
 
-function buildBrainAnswer(info, picks) {
-  const lines = [];
+function makeReason(product, info) {
+  const text = productText(product);
+  if (info.needsPickup && text.includes("拾音器")) return "適合直播、演出或接音箱使用。";
+  if (info.use === "singing" && (text.includes("溫暖") || text.includes("彈唱"))) return "聲音方向適合自彈自唱，會比較容易融入人聲。";
+  if (info.use === "fingerstyle" && (text.includes("層次") || text.includes("清晰") || text.includes("全單"))) return "音色層次比較清楚，適合演奏或更細緻的彈奏。";
+  if (info.sound === "warm" && text.includes("桃花")) return "桃花心木聲音偏溫暖，適合喜歡耐聽音色的人。";
+  if (info.sound === "bright" && text.includes("雲杉")) return "雲杉聲音比較明亮清晰，適合喜歡穿透感的人。";
+  return "整體條件和你的需求接近，可以列入比較。";
+}
 
+function buildBrainAnswer(info, picks) {
   if (!info.raw.trim()) {
     return "你可以直接告訴我：這是不是第一把吉他、預算大約多少、主要用途是彈唱還是演奏。我會用吉他工坊的選琴邏輯幫你縮小到幾把適合比較的琴。";
   }
+
+  const lines = [];
 
   if (info.isFirst) {
     lines.push("如果是第一次買吉他，我不會急著只推薦某一個型號，會先讓你知道合板、面單和全單的差別。");
@@ -101,26 +111,19 @@ function buildBrainAnswer(info, picks) {
     lines.push("如果暫時沒有演出需求，我會建議先把預算放在吉他本身，拾音器之後有需要再加裝也可以。");
   }
 
+  lines.push("");
   lines.push("依你目前的描述，我會建議你先比較下面這幾把：");
 
   picks.forEach((p, i) => {
+    lines.push("");
     lines.push(`${i + 1}. ${p.brand} ${p.model}（${priceText(p.price)}）`);
     lines.push(`   ${makeReason(p, info)}`);
   });
 
+  lines.push("");
   lines.push("最後還是建議你用耳朵比較，甚至盲測。不是問哪一把比較好，而是找哪一把的聲音你比較喜歡。");
 
-  return lines.join("\\n");
-}
-
-function makeReason(product, info) {
-  const text = productText(product);
-  if (info.needsPickup && text.includes("拾音器")) return "適合直播、演出或接音箱使用。";
-  if (info.use === "singing" && (text.includes("溫暖") || text.includes("彈唱"))) return "聲音方向適合自彈自唱，會比較容易融入人聲。";
-  if (info.use === "fingerstyle" && (text.includes("層次") || text.includes("清晰") || text.includes("全單"))) return "音色層次比較清楚，適合演奏或更細緻的彈奏。";
-  if (info.sound === "warm" && text.includes("桃花")) return "桃花心木聲音偏溫暖，適合喜歡耐聽音色的人。";
-  if (info.sound === "bright" && text.includes("雲杉")) return "雲杉聲音比較明亮清晰，適合喜歡穿透感的人。";
-  return "整體條件和你的需求接近，可以列入比較。";
+  return lines.join("\n");
 }
 
 export default function Advisor() {
@@ -144,6 +147,136 @@ export default function Advisor() {
 
   return (
     <section className="chat-ai" id="advisor">
+      <style>{`
+        .chat-ai {
+          padding: 90px 6vw;
+          color: white;
+          background:
+            radial-gradient(circle at 20% 20%, rgba(201,150,85,.22), transparent 26%),
+            linear-gradient(135deg, #050505, #14100c 58%, #050505);
+          font-family: Inter, 'Noto Sans TC', 'Microsoft JhengHei', system-ui, sans-serif;
+        }
+
+        .chat-ai-title {
+          max-width: 860px;
+          margin: 0 auto 40px;
+          text-align: center;
+        }
+
+        .chat-ai-title h2 {
+          margin: 0 0 16px;
+          font-size: clamp(36px, 5vw, 64px);
+          letter-spacing: .08em;
+        }
+
+        .chat-ai-title p {
+          color: rgba(255,255,255,.68);
+        }
+
+        .chat-window {
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 26px;
+          border-radius: 18px;
+          background: rgba(255,255,255,.06);
+          border: 1px solid rgba(255,255,255,.12);
+          box-shadow: 0 30px 80px rgba(0,0,0,.36);
+          backdrop-filter: blur(18px);
+        }
+
+        .message {
+          margin-bottom: 18px;
+          padding: 18px;
+          border-radius: 14px;
+          line-height: 1.75;
+        }
+
+        .message strong {
+          display: block;
+          margin-bottom: 8px;
+          color: #e8c589;
+        }
+
+        .message.ai {
+          background: rgba(0,0,0,.28);
+          border: 1px solid rgba(201,150,85,.18);
+        }
+
+        .message.user {
+          margin-left: auto;
+          max-width: 720px;
+          background: rgba(201,150,85,.18);
+          border: 1px solid rgba(201,150,85,.28);
+        }
+
+        .message p {
+          margin: 0;
+          color: rgba(255,255,255,.82);
+        }
+
+        .message pre {
+          margin: 0;
+          white-space: pre-wrap;
+          font-family: inherit;
+          color: rgba(255,255,255,.84);
+        }
+
+        .starter-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+
+        .starter-row button {
+          border: 1px solid rgba(255,255,255,.14);
+          background: rgba(255,255,255,.06);
+          color: rgba(255,255,255,.78);
+          padding: 10px 14px;
+          border-radius: 999px;
+          font: inherit;
+          cursor: pointer;
+        }
+
+        .starter-row button:hover {
+          border-color: rgba(201,150,85,.8);
+          color: white;
+        }
+
+        .chat-input {
+          display: grid;
+          grid-template-columns: 1fr 120px;
+          gap: 12px;
+        }
+
+        .chat-input textarea {
+          min-height: 74px;
+          resize: vertical;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,.14);
+          background: rgba(0,0,0,.32);
+          color: white;
+          padding: 14px;
+          font: inherit;
+        }
+
+        .chat-input button {
+          border: 0;
+          border-radius: 12px;
+          color: white;
+          font: inherit;
+          font-weight: 900;
+          cursor: pointer;
+          background: linear-gradient(135deg, #c99655, #8b5c2e);
+        }
+
+        @media(max-width: 780px) {
+          .chat-input {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+
       <div className="chat-ai-title">
         <p className="eyebrow">Guitar Workshop Advisor</p>
         <h2>吉他工坊選琴顧問</h2>
