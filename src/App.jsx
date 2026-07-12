@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { loadSiteData, truthy, driveToImage } from './data/loadData'
+import { loadSiteData, truthy, driveToImage, firstValue } from './data/loadData'
 import GuitarArt from './components/GuitarArt'
 
 const money = value => value === '' || value == null ? '價格洽詢' : `NT$ ${Number(value).toLocaleString('zh-TW')}`
@@ -139,7 +139,15 @@ export default function App() {
       features: data.features.filter(
         f => String(f['商品ID'] || '').trim() === productId && truthy(f['是否顯示'])
       ),
-      image: driveToImage(photo?.['GoogleDrive連結'] || '')
+      image: driveToImage(firstValue(photo, [
+        'GoogleDrive連結',
+        'Google Drive連結',
+        'Google Drive 連結',
+        '圖片連結',
+        '照片連結',
+        '圖片網址',
+        '照片網址'
+      ]))
     }
   }
 
