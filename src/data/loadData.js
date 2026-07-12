@@ -2,7 +2,17 @@ import Papa from 'papaparse'
 import fallback from './fallback.json'
 
 const truthy = (v) => ['是','true','1','yes','y'].includes(String(v ?? '').trim().toLowerCase())
+function driveToImage(url) {
+  if (!url) return ''
 
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
+
+  if (match) {
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w2000`
+  }
+
+  return url
+}
 function pickHeaderRow(rows) {
   let best = 0
   let score = -1
@@ -61,4 +71,4 @@ export async function loadSiteData() {
   }
 }
 
-export { truthy }
+export { truthy, driveToImage }

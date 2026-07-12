@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { loadSiteData, truthy } from './data/loadData'
+import { loadSiteData, truthy, driveToImage } from './data/loadData'
 import GuitarArt from './components/GuitarArt'
 
 const money = value => value === '' || value == null ? '價格洽詢' : `NT$ ${Number(value).toLocaleString('zh-TW')}`
