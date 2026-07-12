@@ -1,6 +1,6 @@
 {
   "googleSheetId": "1b4kqwD0TvO5vrDrKeeLvaEoMBTgXuLqh8A-kmAgTFJ0",
-  "useGoogleSheets": true,
+  "useGoogleSheets": false,
   "sheetNames": {
     "brands": "01_品牌",
     "series": "02_系列",

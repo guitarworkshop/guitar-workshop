@@ -22,16 +22,8 @@ function driveToImage(url) {
     .find(Boolean)
 
   return fileId
-    ? `https://lh3.googleusercontent.com/d/${fileId}=w2000`
+    ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w2000`
     : value
-}
-
-const firstValue = (row, keys) => {
-  for (const key of keys) {
-    const value = row?.[key]
-    if (String(value ?? '').trim()) return String(value).trim()
-  }
-  return ''
 }
 
 function pickHeaderRow(rows) {
@@ -54,7 +46,7 @@ function rowsToObjects(rawRows) {
   const headerIndex = pickHeaderRow(rawRows)
 
   const headers = rawRows[headerIndex].map((h, i) =>
-    String(h || `_col_${i + 1}`).replace(/^\uFEFF/, '').trim()
+    String(h || `_col_${i + 1}`).trim()
   )
 
   return rawRows
@@ -133,9 +125,7 @@ function repairRelations(data) {
   const attach = rows =>
     rows.map(r => ({
       ...r,
-      商品ID:
-        firstValue(r, ['商品ID', '商品 ID', '產品ID', '產品 ID']) ||
-        modelToId[firstValue(r, ['型號', '商品型號'])] || ''
+      商品ID: r['商品ID'] || modelToId[r['型號']] || ''
     }))
 
   return {
@@ -194,6 +184,5 @@ export async function loadSiteData() {
 
 export {
   truthy,
-  driveToImage,
-  firstValue
+  driveToImage
 }
