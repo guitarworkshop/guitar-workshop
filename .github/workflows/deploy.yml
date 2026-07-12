@@ -33,7 +33,8 @@ jobs:
           cache: npm
 
       - name: 安裝套件
-        run: npm ci
+        run: npm install --no-audit --no-fund
+        timeout-minutes: 5
 
       - name: 建立最新版網站
         run: npm run build
