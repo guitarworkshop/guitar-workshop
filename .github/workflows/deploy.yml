@@ -23,33 +23,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 取得網站檔案
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 安裝 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+      - uses: actions/configure-pages@v5
 
-      - name: 安裝套件
-        run: npm install --no-audit --no-fund
-        timeout-minutes: 5
-
-      - name: 修正執行權限
-        run: chmod +x node_modules/@esbuild/linux-x64/bin/esbuild
-
-      - name: 建立最新版網站
-        run: node node_modules/vite/bin/vite.js build
-
-      - name: 設定 GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: 上傳網站
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-      - name: 部署網站
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
