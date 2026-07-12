@@ -120,18 +120,36 @@ function Advisor({ data, onClose, onPick }) {
 
 export default function App() {
   const [data, setData] = useState(null), [view, setView] = useState('home'), [activeBrand, setActiveBrand] = useState(null), [brandFilter, setBrandFilter] = useState('all'), [search, setSearch] = useState(''), [selected, setSelected] = useState(null), [advisor, setAdvisor] = useState(false)
-  useEffect(() => { loadSiteData().then(setData) }, [])
+  useEffect(() => {
+  loadSiteData().then(d => {
+    console.log("===== LOAD DATA =====")
+    console.log(d)
+    console.log("products", d.products)
+    console.log("photos", d.photos)
+    setData(d)
+  })
+}, [])
   if (!data) return <div className="loading"><GuitarArt compact/><p>正在載入吉他工坊...</p></div>
-  console.log(data.photos)
+  
   const brands = data.brands.filter(b => truthy(b['是否顯示']))
   const products = data.products.filter(p => truthy(p['是否上架']))
   const itemFor = p => {
-  const photo=data.photos.find(ph=>ph['商品ID']===p['商品ID'] && ph['照片類型']==='主圖')
+  console.log("商品", p["商品ID"]);
+console.log("所有照片", data.photos);
+
+const photo = data.photos.find(
+  ph =>
+    String(ph["商品ID"]).trim() === String(p["商品ID"]).trim() &&
+    String(ph["照片類型"]).trim() === "主圖"
+);
+
+console.log("找到照片", photo);
   return {
     product:p,
     brand:brands.find(b=>b['品牌ID']===p['品牌ID']),
     spec:data.specs.find(s=>s['商品ID']===p['商品ID']),
     features:data.features.filter(f=>f['商品ID']===p['商品ID'] && truthy(f['是否顯示'])),
+    console.log("圖片網址", photo?.["GoogleDrive連結"]);
     image: driveToImage(photo?.['GoogleDrive連結']||'')
   }
 }
