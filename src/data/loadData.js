@@ -22,7 +22,7 @@ function driveToImage(url) {
     .find(Boolean)
 
   return fileId
-    ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w2000`
+    ? `https://lh3.googleusercontent.com/d/${fileId}=w2000`
     : value
 }
 
