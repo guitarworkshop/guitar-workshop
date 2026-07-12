@@ -57,10 +57,6 @@ const BRAND_CONTENT = {
 }
 
 
-const driveToImage = (url='') => {
-  const m=String(url).match(/\/file\/d\/([^/]+)/)
-  return m?`https://drive.google.com/thumbnail?id=${m[1]}&sz=w2000`:url
-}
 
 const normalizeBrand = name => {
   const n = String(name || '').toUpperCase().replace(/\s+/g, ' ').trim()
@@ -120,39 +116,33 @@ function Advisor({ data, onClose, onPick }) {
 
 export default function App() {
   const [data, setData] = useState(null), [view, setView] = useState('home'), [activeBrand, setActiveBrand] = useState(null), [brandFilter, setBrandFilter] = useState('all'), [search, setSearch] = useState(''), [selected, setSelected] = useState(null), [advisor, setAdvisor] = useState(false)
-  useEffect(() => {
-  loadSiteData().then(d => {
-    console.log("===== LOAD DATA =====")
-    console.log(d)
-    console.log("products", d.products)
-    console.log("photos", d.photos)
-    setData(d)
-  })
-}, [])
+  useEffect(() => { loadSiteData().then(setData) }, [])
   if (!data) return <div className="loading"><GuitarArt compact/><p>正在載入吉他工坊...</p></div>
   
   const brands = data.brands.filter(b => truthy(b['是否顯示']))
   const products = data.products.filter(p => truthy(p['是否上架']))
   const itemFor = p => {
-  console.log("商品", p["商品ID"]);
-console.log("所有照片", data.photos);
+    const productId = String(p['商品ID'] || '').trim()
 
-const photo = data.photos.find(
-  ph =>
-    String(ph["商品ID"]).trim() === String(p["商品ID"]).trim() &&
-    String(ph["照片類型"]).trim() === "主圖"
-);
+    const productPhotos = (data.photos || [])
+      .filter(ph => String(ph['商品ID'] || '').trim() === productId)
+      .sort((a, b) => Number(a['排序'] || 9999) - Number(b['排序'] || 9999))
 
-console.log("找到照片", photo);
-  return {
-    product:p,
-    brand:brands.find(b=>b['品牌ID']===p['品牌ID']),
-    spec:data.specs.find(s=>s['商品ID']===p['商品ID']),
-    features:data.features.filter(f=>f['商品ID']===p['商品ID'] && truthy(f['是否顯示'])),
-    console.log("圖片網址", photo?.["GoogleDrive連結"]);
-    image: driveToImage(photo?.['GoogleDrive連結']||'')
+    const photo =
+      productPhotos.find(ph => String(ph['照片類型'] || '').trim() === '主圖') ||
+      productPhotos[0]
+
+    return {
+      product: p,
+      brand: brands.find(b => String(b['品牌ID'] || '').trim() === String(p['品牌ID'] || '').trim()),
+      spec: data.specs.find(s => String(s['商品ID'] || '').trim() === productId),
+      features: data.features.filter(
+        f => String(f['商品ID'] || '').trim() === productId && truthy(f['是否顯示'])
+      ),
+      image: driveToImage(photo?.['GoogleDrive連結'] || '')
+    }
   }
-}
+
   const filtered = products.filter(p => (brandFilter === 'all' || p['品牌ID'] === brandFilter) && `${p['型號']} ${p['商品編號']}`.toLowerCase().includes(search.toLowerCase()))
   const featured = products.filter(p=>truthy(p['是否推薦']) || truthy(p['是否精選'])).slice(0,4)
   const phone=getSetting(data,'phone','0930-223-729'), line=getSetting(data,'line_url','#'), address=getSetting(data,'address','台中市東區十甲東路291號')
