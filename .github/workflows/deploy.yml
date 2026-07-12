@@ -36,8 +36,11 @@ jobs:
         run: npm install --no-audit --no-fund
         timeout-minutes: 5
 
+      - name: 修正執行權限
+        run: chmod +x node_modules/@esbuild/linux-x64/bin/esbuild
+
       - name: 建立最新版網站
-        run: npm run build
+        run: node node_modules/vite/bin/vite.js build
 
       - name: 設定 GitHub Pages
         uses: actions/configure-pages@v5
