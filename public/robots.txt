@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://guitarworkshop.github.io/guitar-workshop/sitemap.xml

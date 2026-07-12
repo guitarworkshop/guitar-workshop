@@ -1,0 +1,15 @@
+{
+  "googleSheetId": "1b4kqwD0TvO5vrDrKeeLvaEoMBTgXuLqh8A-kmAgTFJ0",
+  "useGoogleSheets": true,
+  "sheetNames": {
+    "brands": "01_品牌",
+    "series": "02_系列",
+    "products": "03_商品",
+    "specs": "04_規格",
+    "colors": "05_顏色",
+    "photos": "06_照片",
+    "features": "07_特色",
+    "ai": "08_AI推薦",
+    "settings": "09_網站設定"
+  }
+}

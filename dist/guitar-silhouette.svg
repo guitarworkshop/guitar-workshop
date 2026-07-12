@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1050">
+  <defs>
+    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d4a765"/>
+      <stop offset=".45" stop-color="#8d552f"/>
+      <stop offset="1" stop-color="#4c2a18"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="30" stdDeviation="28" flood-opacity=".5"/></filter>
+  </defs>
+  <g filter="url(#shadow)" transform="rotate(-8 350 525)">
+    <rect x="324" y="60" width="52" height="480" rx="20" fill="#442718"/>
+    <path d="M310 75 Q350 30 390 75 L405 160 Q350 190 295 160Z" fill="#2a1811"/>
+    <circle cx="350" cy="685" r="205" fill="url(#wood)"/>
+    <ellipse cx="350" cy="520" rx="138" ry="150" fill="url(#wood)"/>
+    <circle cx="350" cy="625" r="48" fill="#17100c"/>
+    <circle cx="350" cy="625" r="62" fill="none" stroke="#d7b782" stroke-width="8"/>
+    <rect x="276" y="785" width="148" height="28" rx="9" fill="#2a1811"/>
+    <g stroke="#e7d5b9" stroke-width="2" opacity=".85">
+      <line x1="338" y1="100" x2="338" y2="805"/><line x1="343" y1="100" x2="343" y2="805"/>
+      <line x1="348" y1="100" x2="348" y2="805"/><line x1="353" y1="100" x2="353" y2="805"/>
+      <line x1="358" y1="100" x2="358" y2="805"/><line x1="363" y1="100" x2="363" y2="805"/>
+    </g>
+  </g>
+</svg>
