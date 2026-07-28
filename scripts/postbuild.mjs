@@ -174,7 +174,7 @@ const businessSchema = {
   }
 }
 
-const routes = ['/', '/brands/', '/products/', '/about/']
+const routes = ['/', '/brands/', '/products/', '/knowledge/', '/about/']
 await writeFile('dist/index.html', pageHtml({
   title: '吉他工坊｜台中木吉他・電吉他・專業選琴與調整',
   description: '吉他工坊位於台中，提供木吉他、電吉他選購、專業技師調整與 AI 選琴服務，探索 DADARWOOD、ANISA、ST.MATTHEW、DO ACOUSTIC 等品牌。',
@@ -192,6 +192,38 @@ await writeRoute('/products/', {
   title: '吉他商品｜木吉他・電吉他・古典吉他｜吉他工坊',
   description: '瀏覽吉他工坊目前上架的木吉他、電吉他與古典吉他，依品牌、型號、木材與演奏需求挑選。',
   canonical: `${base}/products/`
+})
+await writeRoute('/knowledge/', {
+  title: '選琴知識｜初學吉他選購與保養指南｜吉他工坊',
+  description: '吉他工坊選琴知識，從預算、合板面單全單、尺寸、木材與手感，幫助初學者選到真正適合的吉他。',
+  canonical: `${base}/knowledge/`
+})
+const guideRoute = '/knowledge/solid-top-vs-laminate/'
+routes.push(guideRoute)
+await writeRoute(guideRoute, {
+  title: '合板、面單、全單吉他差在哪？初學者選琴指南｜吉他工坊',
+  description: '完整比較合板、面單與全單吉他的結構、聲音、價格、耐候性與適合對象，幫助初學者依預算選到不容易後悔的吉他。',
+  canonical: `${base}${guideRoute}`,
+  schema: [{
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: '合板、面單、全單吉他差在哪？',
+    description: '完整比較合板、面單與全單吉他的結構、聲音、價格、耐候性與適合對象。',
+    datePublished: '2026-07-29',
+    dateModified: '2026-07-29',
+    inLanguage: 'zh-Hant-TW',
+    author: { '@type': 'Organization', name: '吉他工坊', url: `${base}/` },
+    publisher: { '@id': `${base}/#business` },
+    mainEntityOfPage: `${base}${guideRoute}`
+  }, {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '首頁', item: `${base}/` },
+      { '@type': 'ListItem', position: 2, name: '選琴知識', item: `${base}/knowledge/` },
+      { '@type': 'ListItem', position: 3, name: '合板、面單、全單吉他差異', item: `${base}${guideRoute}` }
+    ]
+  }]
 })
 await writeRoute('/about/', {
   title: '關於吉他工坊｜台中吉他銷售・專業調整・選琴諮詢',

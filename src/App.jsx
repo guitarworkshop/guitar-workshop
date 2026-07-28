@@ -109,6 +109,14 @@ const BRAND_IMAGES = {
   'ST.MATTHEW': 'images/brands/st-matthew.webp'
 }
 
+const KNOWLEDGE_ARTICLES = [{
+  slug: 'solid-top-vs-laminate',
+  category: '選琴基礎',
+  title: '合板、面單、全單吉他差在哪？',
+  excerpt: '從結構、聲音、價格與保養一次看懂，找到符合預算與演奏需求的第一把吉他。',
+  readTime: '約 7 分鐘'
+}]
+
 const brandImage = name => `${import.meta.env.BASE_URL}${BRAND_IMAGES[normalizeBrand(name)] || ''}`
 
 
@@ -132,10 +140,39 @@ function Header({ view, navigate, onOpenAdvisor }) {
       <button className={view === 'home' ? 'active' : ''} onClick={() => go('home')}>首頁</button>
       <button className={view === 'brands' || view === 'brand' ? 'active' : ''} onClick={() => go('brands')}>品牌</button>
       <button className={view === 'products' ? 'active' : ''} onClick={() => go('products')}>商品</button>
+      <button className={view === 'knowledge' || view === 'article' ? 'active' : ''} onClick={() => go('knowledge')}>選琴知識</button>
       <button onClick={onOpenAdvisor}>AI 選琴</button>
       <button className={view === 'about' ? 'active' : ''} onClick={() => go('about')}>關於我們</button>
     </nav>
   </header>
+}
+
+function KnowledgeIndex({ onOpenArticle }) {
+  return <section className="page-shell knowledge-page">
+    <div className="page-title knowledge-title"><p className="eyebrow">GUITAR GUIDE</p><h1>選琴知識</h1><p className="page-intro">不只看規格，從預算、材質與實際演奏需求，找到真正適合你的吉他。</p></div>
+    <div className="knowledge-grid">{KNOWLEDGE_ARTICLES.map(article => <article className="knowledge-card" key={article.slug}>
+      <div className="knowledge-card-visual" aria-hidden="true"><span>GW</span><b>選琴指南</b></div>
+      <div className="knowledge-card-copy"><p className="eyebrow">{article.category}</p><h2>{article.title}</h2><p>{article.excerpt}</p><div className="knowledge-meta"><span>更新：2026 年 7 月</span><span>{article.readTime}</span></div><button className="knowledge-link" onClick={() => onOpenArticle(article.slug)}>閱讀完整文章 <span>→</span></button></div>
+    </article>)}</div>
+  </section>
+}
+
+function KnowledgeArticle({ onBack, onProducts, onAdvisor }) {
+  return <article className="guide-article">
+    <header className="guide-hero"><button className="product-back" onClick={onBack}>← 返回選琴知識</button><p className="eyebrow">選琴基礎</p><h1>合板、面單、全單吉他差在哪？</h1><p className="guide-lead">買吉他時最常看到的三個名詞，其實是在說「琴身使用多少實木」。它們會影響聲音、價格、耐候性，也會影響你彈了一段時間後是否容易想升級。</p><div className="knowledge-meta"><span>吉他工坊編輯</span><span>更新於 2026 年 7 月 29 日</span><span>約 7 分鐘</span></div></header>
+    <div className="guide-layout">
+      <aside className="guide-summary"><p className="eyebrow">先看結論</p><h2>怎麼選最快？</h2><ul><li><b>預算約 4,000～5,000：</b>合板琴適合先確認自己是否會持續學習。</li><li><b>預算約 7,000～20,000：</b>面單琴通常是初學者最均衡、也最不容易後悔的選擇。</li><li><b>預算 20,000 以上：</b>若做工與手感合適，優先試全單琴，聲音成長與細節通常更完整。</li></ul></aside>
+      <div className="guide-content">
+        <section><h2>先弄懂：面板為什麼最重要？</h2><p>吉他的面板就像聲音的引擎。琴弦振動經過琴橋傳到面板，面板推動空氣，形成我們聽到的音色與音量。因此，同樣的外型與尺寸下，面板結構往往比華麗裝飾更直接影響聲音。</p></section>
+        <section><h2>合板吉他：穩定、入門門檻低</h2><p>合板是由多層薄木材貼合而成，面板與側背板通常都使用合板。它對溫濕度變化較不敏感、價格也較容易入手，適合預算有限或還不確定是否會持續彈琴的人。</p><p>聲音上，合板的振動會受到膠合層限制，通常較集中、泛音與細節較少。有些琴聽起來會比較「轟」或鬆散；練習一段時間、耳朵開始進步後，也比較容易產生升級需求。</p><div className="guide-callout"><b>適合誰：</b>預算優先、環境變化大、想先用較低成本開始學習的人。</div></section>
+        <section><h2>面單吉他：初學到進階最均衡</h2><p>面單的面板使用一整片實木，側板與背板仍是合板。因為最主要的發聲面改為實木，聲音通常比合板更紮實、清楚，動態與細節也更好。</p><p>對多數初學者來說，面單是最划算的長期選擇。它的價格不像全單那麼高，卻已能提供明顯的聲音提升，也足以陪伴練習、彈唱、錄音與小型演出。若預算允許，我們通常會建議第一把正式學習用琴從面單開始。</p><div className="guide-callout"><b>適合誰：</b>確定想持續學習，希望手感與聲音能陪伴數年的初學者與進階玩家。</div></section>
+        <section><h2>全單吉他：更完整的共鳴與聲音成長</h2><p>全單代表面板、側板與背板都使用實木。整個琴身能更自由地參與振動，因此通常擁有更豐富的泛音、細節、動態與空間感。隨著演奏時間增加，木材也可能逐漸展現更開放的聲音。</p><p>不過，「全單」不等於一定勝過所有面單。木材等級、結構設計、製作精度與琴頸手感同樣重要。選購時應該實際比較兩把琴，而不是只看標籤。若預算已到兩萬元以上，建議把做工良好的全單納入試琴清單。</p><div className="guide-callout"><b>適合誰：</b>重視音色細節、動態與長期演奏價值，且願意做好濕度管理的人。</div></section>
+        <section><h2>三種結構快速比較</h2><div className="guide-table-wrap"><table className="guide-table"><thead><tr><th>項目</th><th>合板</th><th>面單</th><th>全單</th></tr></thead><tbody><tr><th>木材結構</th><td>面、側、背皆合板</td><td>實木面板＋合板側背</td><td>面、側、背皆實木</td></tr><tr><th>聲音表現</th><td>基本、較集中</td><td>紮實清楚、均衡</td><td>細節豐富、動態較大</td></tr><tr><th>耐候性</th><td>較高</td><td>中等</td><td>需注意濕度</td></tr><tr><th>常見預算</th><td>約 4,000～5,000</td><td>約 7,000～20,000</td><td>約 20,000 以上</td></tr><tr><th>適合對象</th><td>嘗試入門</td><td>多數初學與進階者</td><td>重視音色的長期玩家</td></tr></tbody></table></div></section>
+        <section><h2>別只看「單板」，手感也同樣重要</h2><p>一把規格漂亮但弦距過高、琴頸不順手的吉他，仍可能讓練習變得吃力。選琴時應同時確認桶身尺寸、琴頸手感、弦距、音準與是否打弦。吉他工坊的上架商品在出貨前都會由專業技師調整弦距與手感，完成檢測後再交付。</p></section>
+        <section className="guide-cta"><p className="eyebrow">NEXT STEP</p><h2>還是不確定哪一種適合你？</h2><p>告訴我們預算、程度與主要用途，先從目前商品中縮小範圍，再比較真正有意義的差異。</p><div className="hero-actions left"><button className="primary" onClick={onAdvisor}>使用 AI 選琴</button><button className="link-button dark" onClick={onProducts}>查看全部商品 →</button></div></section>
+      </div>
+    </div>
+  </article>
 }
 
 function ProductCard({ item, onClick }) {
@@ -420,12 +457,13 @@ export default function App() {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
   const productSlug = path.startsWith('/product/') ? decodeURIComponent(path.split('/')[2] || '') : ''
+  const articleSlug = path.startsWith('/knowledge/') ? decodeURIComponent(path.split('/')[2] || '') : ''
   const brandPathValue = path.startsWith('/brand/') || path.startsWith('/brands/')
     ? decodeURIComponent(path.split('/')[2] || '')
     : ''
-  const view = productSlug ? 'product' : brandPathValue ? 'brand' : path === '/brands' ? 'brands' : path === '/products' ? 'products' : path === '/about' ? 'about' : 'home'
+  const view = productSlug ? 'product' : articleSlug ? 'article' : brandPathValue ? 'brand' : path === '/brands' ? 'brands' : path === '/products' ? 'products' : path === '/knowledge' ? 'knowledge' : path === '/about' ? 'about' : 'home'
   const navigate = target => {
-    const routes = { home: '/', brands: '/brands', products: '/products', about: '/about' }
+    const routes = { home: '/', brands: '/brands', products: '/products', knowledge: '/knowledge', about: '/about' }
     const next = routes[target] || target
     window.history.pushState({}, '', `${import.meta.env.BASE_URL.replace(/\/$/, '')}${next}`)
     setLocationPath(next)
@@ -464,6 +502,12 @@ export default function App() {
     } else if (view === 'products') {
       title = '全部吉他商品｜木吉他・電吉他｜吉他工坊'
       description = '瀏覽吉他工坊目前上架的吉他商品，依品牌、型號與需求快速選琴。'
+    } else if (view === 'knowledge') {
+      title = '選琴知識｜初學吉他選購與保養指南｜吉他工坊'
+      description = '吉他工坊選琴知識，從預算、合板面單全單、尺寸、木材與手感，幫助初學者選到真正適合的吉他。'
+    } else if (view === 'article' && articleSlug === 'solid-top-vs-laminate') {
+      title = '合板、面單、全單吉他差在哪？初學者選琴指南｜吉他工坊'
+      description = '完整比較合板、面單與全單吉他的結構、聲音、價格、耐候性與適合對象，幫助初學者依預算選到不容易後悔的吉他。'
     }
 
     document.title = title
@@ -554,6 +598,27 @@ export default function App() {
           { '@type': 'ListItem', position: 3, name: product['型號'], item: canonical }
         ]
       })
+    } else if (view === 'article' && articleSlug === 'solid-top-vs-laminate') {
+      schemas.push({
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: '合板、面單、全單吉他差在哪？',
+        description,
+        datePublished: '2026-07-29',
+        dateModified: '2026-07-29',
+        inLanguage: 'zh-Hant-TW',
+        author: { '@type': 'Organization', name: '吉他工坊', url: `${base}/` },
+        publisher: { '@id': `${base}/#business` },
+        mainEntityOfPage: canonical
+      }, {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '首頁', item: `${base}/` },
+          { '@type': 'ListItem', position: 2, name: '選琴知識', item: `${base}/knowledge/` },
+          { '@type': 'ListItem', position: 3, name: '合板、面單、全單吉他差異', item: canonical }
+        ]
+      })
     }
     pageSchema.textContent = JSON.stringify(schemas)
     document.head.appendChild(pageSchema)
@@ -575,7 +640,7 @@ export default function App() {
 
       <section className="advisor-hero"><div><p className="eyebrow">GUITAR ADVISOR</p><h2>不知道從哪一把開始？</h2><p>告訴我們預算、程度與用途，快速取得三個建議。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始選琴</button></div><div className="advisor-orb">AI</div></section>
 
-
+      <section className="section knowledge-home"><div className="center-head"><p className="eyebrow">GUITAR GUIDE</p><h2>第一次選琴，先看懂差異</h2><p>從材質與預算開始，少走一次不必要的升級路。</p></div><button className="knowledge-feature" onClick={()=>navigate('/knowledge/solid-top-vs-laminate')}><span><small>選琴基礎・約 7 分鐘</small><b>合板、面單、全單吉他差在哪？</b></span><em>閱讀指南 →</em></button></section>
     </>}
 
     {view === 'brands' && <section className="page-shell brands-page"><div className="page-title"><p className="eyebrow">OUR BRANDS</p><h1>探索品牌</h1><p className="page-intro">四種聲音性格，找到與你最契合的那一把。</p></div><div className="brand-page-grid">{brands.map((b,i)=>{const c=BRAND_CONTENT[normalizeBrand(b['品牌名稱'])]; return <article className="brand-story-card" key={b['品牌ID']} style={{'--brand-image': `url("${brandImage(b['品牌名稱'])}")`}}><div className="brand-story-copy"><p className="eyebrow">{c?.position || `0${i+1}`}</p><h2>{b['品牌名稱']}</h2><p>{c?.motto || b['品牌簡介']}</p><button className="brand-cta" onClick={()=>openBrand(b)}>閱讀品牌故事 <span aria-hidden="true">→</span></button></div></article>})}</div></section>}
@@ -589,6 +654,12 @@ export default function App() {
     {view === 'products' && <section className="page-shell products-page"><div className="page-title split"><div><p className="eyebrow">PRODUCTS</p><h1>全部商品</h1></div><div className="filters"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="搜尋型號..."/><select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)}><option value="all">全部品牌</option>{brands.map(b=><option key={b['品牌ID']} value={b['品牌ID']}>{b['品牌名稱']}</option>)}</select></div></div><div className="category-strip"><button className={brandFilter==='all'?'active':''} onClick={()=>setBrandFilter('all')}>全部</button>{brands.map(b=><button key={b['品牌ID']} className={brandFilter===b['品牌ID']?'active':''} onClick={()=>setBrandFilter(b['品牌ID'])}>{b['品牌名稱']}</button>)}</div><div className="product-grid">{filtered.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>openProduct(p)}/>)}</div>{!filtered.length&&<p className="empty">目前沒有符合條件的商品。</p>}</section>}
 
     {view === 'product' && (currentProductItem ? <ProductDetail item={currentProductItem} onBack={()=>navigate('/products')}/> : <section className="page-shell"><div className="page-title"><p className="eyebrow">PRODUCT NOT FOUND</p><h1>找不到這項商品</h1><button className="primary" onClick={()=>navigate('/products')}>返回全部商品</button></div></section>)}
+
+    {view === 'knowledge' && <KnowledgeIndex onOpenArticle={slug=>navigate(`/knowledge/${slug}`)}/>}
+
+    {view === 'article' && (articleSlug === 'solid-top-vs-laminate'
+      ? <KnowledgeArticle onBack={()=>navigate('/knowledge')} onProducts={()=>navigate('/products')} onAdvisor={()=>setAdvisor(true)}/>
+      : <section className="page-shell"><div className="page-title"><p className="eyebrow">ARTICLE NOT FOUND</p><h1>找不到這篇文章</h1><button className="primary" onClick={()=>navigate('/knowledge')}>返回選琴知識</button></div></section>)}
 
     {view === 'about' && <section className="page-shell about-page"><div className="page-title"><p className="eyebrow">ABOUT GUITAR WORKSHOP</p><h1>吉他不只是規格，<br/>更重要的是手感與聲音。</h1></div><div className="about-grid"><div className="about-art">{aboutItem?.image ? <img src={aboutItem.image} alt={`${aboutItem.brand?.['品牌名稱'] || '吉他工坊'} ${aboutItem.product?.['型號'] || '精選吉他'}`} className="about-product-image"/> : <GuitarArt/>}</div><div><p>吉他工坊提供木吉他與相關樂器的銷售、選琴諮詢及出貨前調整。我們不只比較品牌，而是從預算、材料、桶身與演奏需求，協助你選到真正適合長期使用的樂器。</p><p>所有上架商品以 Google Sheets 作為主要資料來源，品牌故事與技術內容則以實際型錄、產品資料與我們的品牌定位為基礎。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始 AI 選琴</button></div></div></section>}
   </main>
