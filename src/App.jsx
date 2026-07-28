@@ -66,6 +66,15 @@ const BRAND_CONTENT = {
   }
 }
 
+const BRAND_IMAGES = {
+  DADARWOOD: 'images/brands/dadarwood.webp',
+  ANISA: 'images/brands/anisa.webp',
+  'DO ACOUSTIC': 'images/brands/do-acoustic.webp',
+  'ST.MATTHEW': 'images/brands/st-matthew.webp'
+}
+
+const brandImage = name => `${import.meta.env.BASE_URL}${BRAND_IMAGES[normalizeBrand(name)] || ''}`
+
 
 
 const normalizeBrand = name => {
@@ -465,8 +474,7 @@ export default function App() {
 
       <section className="brand-showcase">{brands.slice(0,4).map((b,i)=>{
         const key=normalizeBrand(b['品牌名稱']), c=BRAND_CONTENT[key]
-        const representative = representativeItemForBrand(b)
-        return <article className={`brand-panel panel-${i+1}`} key={b['品牌ID']}><div><p className="eyebrow">{c?.position || 'COLLECTION'}</p><h2>{b['品牌名稱']}</h2><p className="brand-motto">{c?.motto || b['品牌簡介']}</p><button className="link-button" onClick={()=>openBrand(b)}>探索品牌 ›</button></div>{representative?.image ? <img src={representative.image} alt={`${b['品牌名稱']} ${representative.product?.['型號'] || '代表商品'}`} className="brand-panel-image"/> : <GuitarArt compact/>}</article>
+        return <article className={`brand-panel brand-banner panel-${i+1}`} key={b['品牌ID']} style={{'--brand-image': `url("${brandImage(b['品牌名稱'])}")`}}><div className="brand-panel-copy"><p className="eyebrow">{c?.position || 'COLLECTION'}</p><h2>{b['品牌名稱']}</h2><p className="brand-motto">{c?.motto || b['品牌簡介']}</p><button className="brand-cta" onClick={()=>openBrand(b)}>探索品牌 <span aria-hidden="true">→</span></button></div></article>
       })}</section>
 
       <section className="section featured-home"><div className="center-head"><p className="eyebrow">FEATURED MODELS</p><h2>精選推薦</h2></div><div className="featured-grid">{featured.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>openProduct(p)}/>)}</div><div className="center-action"><button className="link-button dark" onClick={()=>goProducts()}>依分類瀏覽商品 ›</button></div></section>
@@ -476,10 +484,10 @@ export default function App() {
 
     </>}
 
-    {view === 'brands' && <section className="page-shell"><div className="page-title"><p className="eyebrow">OUR BRANDS</p><h1>探索品牌</h1></div><div className="brand-page-grid">{brands.map((b,i)=>{const c=BRAND_CONTENT[normalizeBrand(b['品牌名稱'])]; const representative=representativeItemForBrand(b); return <article key={b['品牌ID']}><div className="brand-page-art">{representative?.image ? <img src={representative.image} alt={`${b['品牌名稱']} ${representative.product?.['型號'] || '代表商品'}`} className="brand-page-image"/> : <GuitarArt compact/>}</div><p className="eyebrow">{c?.position || `0${i+1}`}</p><h2>{b['品牌名稱']}</h2><p className="brand-motto-dark">{c?.motto || b['品牌簡介']}</p><button className="link-button dark" onClick={()=>openBrand(b)}>閱讀品牌故事 ›</button></article>})}</div></section>}
+    {view === 'brands' && <section className="page-shell brands-page"><div className="page-title"><p className="eyebrow">OUR BRANDS</p><h1>探索品牌</h1><p className="page-intro">四種聲音性格，找到與你最契合的那一把。</p></div><div className="brand-page-grid">{brands.map((b,i)=>{const c=BRAND_CONTENT[normalizeBrand(b['品牌名稱'])]; return <article className="brand-story-card" key={b['品牌ID']} style={{'--brand-image': `url("${brandImage(b['品牌名稱'])}")`}}><div className="brand-story-copy"><p className="eyebrow">{c?.position || `0${i+1}`}</p><h2>{b['品牌名稱']}</h2><p>{c?.motto || b['品牌簡介']}</p><button className="brand-cta" onClick={()=>openBrand(b)}>閱讀品牌故事 <span aria-hidden="true">→</span></button></div></article>})}</div></section>}
 
     {view === 'brand' && currentBrand && <>
-      <section className="brand-detail-hero"><div><p className="eyebrow">{currentBrandContent.position}</p><h1>{currentBrand['品牌名稱']}</h1><h2>{currentBrandContent.title}</h2><p>{currentBrandContent.intro}</p><div className="hero-actions left"><button className="primary" onClick={()=>goProducts(currentBrand['品牌ID'])}>查看目前商品</button><button className="link-button" onClick={()=>navigate('brands')}>返回品牌 ›</button></div></div><div className="brand-detail-art">{representativeItemForBrand(currentBrand)?.image ? <img src={representativeItemForBrand(currentBrand).image} alt={`${currentBrand['品牌名稱']} ${representativeItemForBrand(currentBrand).product?.['型號'] || '代表商品'}`} className="brand-detail-image"/> : <GuitarArt/>}</div></section>
+      <section className="brand-detail-hero brand-detail-banner" style={{'--brand-image': `url("${brandImage(currentBrand['品牌名稱'])}")`}}><div className="brand-detail-copy"><p className="eyebrow">{currentBrandContent.position}</p><h1>{currentBrand['品牌名稱']}</h1><h2>{currentBrandContent.title}</h2><p>{currentBrandContent.intro}</p><div className="hero-actions left"><button className="primary light" onClick={()=>goProducts(currentBrand['品牌ID'])}>查看目前商品</button><button className="brand-cta" onClick={()=>navigate('brands')}>返回品牌 <span aria-hidden="true">→</span></button></div></div></section>
       <section className="brand-philosophy"><p className="brand-quote">“{currentBrandContent.motto}”</p><div className="philosophy-grid">{currentBrandContent.highlights.map(([title,copy],i)=><article key={title}><span>0{i+1}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>
       <section className="section brand-products"><div className="center-head"><p className="eyebrow">CURRENT COLLECTION</p><h2>目前上架商品</h2></div><div className="featured-grid">{currentBrandProducts.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>openProduct(p)}/>)}</div><div className="center-action"><button className="link-button dark" onClick={()=>goProducts(currentBrand['品牌ID'])}>查看全部 ›</button></div></section>
     </>}

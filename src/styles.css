@@ -34,3 +34,203 @@
 .about-product-image{width:88%;height:610px;object-position:center}
 @media(max-width:1050px){.hero-product-image{height:560px;opacity:.62}.brand-panel-image{right:-3%;width:46%;opacity:.64}.brand-detail-image{height:560px;opacity:.34}.about-product-image{height:500px}}
 @media(max-width:720px){.hero-product-image{height:470px;transform:translateY(70px);opacity:.48}.brand-panel-image{right:-12%;width:58%;height:80%;opacity:.5}.brand-page-image{height:310px}.brand-detail-image{height:480px;opacity:.22}.about-product-image{height:390px}}
+
+/* Brand editorial banners */
+.brand-showcase{
+  gap:14px;
+  padding:14px;
+}
+.brand-banner{
+  min-height:570px;
+  isolation:isolate;
+  align-items:flex-end;
+  background-image:var(--brand-image);
+  background-size:cover;
+  background-position:center;
+  color:#fff;
+}
+.brand-banner::before,
+.brand-story-card::before,
+.brand-detail-banner::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:linear-gradient(90deg,rgba(5,5,5,.82) 0%,rgba(5,5,5,.58) 38%,rgba(5,5,5,.08) 72%);
+}
+.brand-banner::after,
+.brand-story-card::after,
+.brand-detail-banner::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:linear-gradient(0deg,rgba(0,0,0,.42),transparent 48%);
+}
+.brand-panel-copy{
+  max-width:480px!important;
+}
+.brand-banner .eyebrow,
+.brand-story-card .eyebrow,
+.brand-detail-banner .eyebrow{
+  color:#d8c4a6;
+}
+.brand-banner h2{
+  font-family:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  font-size:clamp(42px,4vw,64px);
+  letter-spacing:-.035em;
+}
+.brand-banner .brand-motto{
+  color:rgba(255,255,255,.82);
+}
+.brand-cta{
+  display:inline-flex;
+  align-items:center;
+  gap:12px;
+  margin-top:18px;
+  padding:0 0 8px;
+  border:0;
+  border-bottom:1px solid rgba(255,255,255,.58);
+  background:transparent;
+  color:#fff;
+  font-weight:700;
+}
+.brand-cta span{
+  transition:transform .2s ease;
+}
+.brand-cta:hover span{
+  transform:translateX(5px);
+}
+.brands-page{
+  background:#f4f1ec;
+}
+.brands-page .page-title{
+  margin-bottom:48px;
+}
+.page-intro{
+  color:#6e6e73;
+  font-size:18px;
+}
+.brand-story-card{
+  position:relative;
+  isolation:isolate;
+  min-height:540px;
+  display:flex;
+  align-items:flex-end;
+  overflow:hidden;
+  padding:48px!important;
+  border-radius:12px!important;
+  background-image:var(--brand-image)!important;
+  background-size:cover!important;
+  background-position:center!important;
+  color:#fff;
+  box-shadow:0 18px 50px rgba(39,29,20,.12);
+}
+.brand-story-copy{
+  position:relative;
+  z-index:2;
+  max-width:430px;
+}
+.brand-page-grid .brand-story-card h2{
+  font-family:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  font-size:clamp(38px,4vw,58px);
+  margin:10px 0 8px;
+}
+.brand-story-copy>p:not(.eyebrow){
+  color:rgba(255,255,255,.82);
+  font-size:18px;
+}
+.brand-detail-banner{
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  align-items:center;
+  min-height:790px;
+  padding:130px 7vw 70px;
+  background-image:var(--brand-image);
+  background-size:cover;
+  background-position:center;
+  color:#fff;
+}
+.brand-detail-banner::before{
+  background:linear-gradient(90deg,rgba(3,3,3,.9) 0%,rgba(3,3,3,.7) 42%,rgba(3,3,3,.08) 76%);
+}
+.brand-detail-copy{
+  position:relative;
+  z-index:2;
+  max-width:760px;
+}
+.brand-detail-banner h1{
+  color:#fff;
+}
+.brand-detail-banner h2{
+  color:#fff;
+}
+.brand-detail-banner .brand-detail-copy>p:last-of-type{
+  max-width:700px;
+  color:rgba(255,255,255,.78);
+}
+.primary.light{
+  background:#fff;
+  color:#1d1d1f;
+}
+.primary.light:hover{
+  background:#eee9e2;
+}
+
+@media(max-width:1050px){
+  .brand-banner{
+    min-height:520px;
+    padding:42px;
+  }
+  .brand-story-card{
+    min-height:490px;
+  }
+}
+
+@media(max-width:720px){
+  .brand-showcase{
+    padding:8px;
+    gap:8px;
+  }
+  .brand-banner{
+    min-height:500px;
+    padding:30px 26px;
+    background-position:62% center;
+  }
+  .brand-banner::before,
+  .brand-story-card::before{
+    background:linear-gradient(0deg,rgba(3,3,3,.88) 0%,rgba(3,3,3,.55) 48%,rgba(3,3,3,.08) 78%);
+  }
+  .brand-panel-copy{
+    max-width:100%!important;
+  }
+  .brand-banner .brand-motto{
+    font-size:16px;
+  }
+  .brands-page{
+    padding-left:12px;
+    padding-right:12px;
+  }
+  .brands-page .page-title{
+    padding:0 12px;
+  }
+  .brand-story-card{
+    min-height:500px;
+    padding:30px 26px!important;
+    background-position:62% center!important;
+  }
+  .brand-detail-banner{
+    min-height:760px;
+    padding:105px 24px 54px;
+    align-items:flex-end;
+    background-position:62% center;
+  }
+  .brand-detail-banner::before{
+    background:linear-gradient(0deg,rgba(2,2,2,.94) 0%,rgba(2,2,2,.72) 50%,rgba(2,2,2,.06) 84%);
+  }
+  .brand-detail-banner .brand-detail-copy>p:last-of-type{
+    font-size:16px;
+    line-height:1.75;
+  }
+}
