@@ -147,14 +147,73 @@ function Header({ view, navigate, onOpenAdvisor }) {
   </header>
 }
 
-function KnowledgeIndex({ onOpenArticle }) {
+const articleFromRow = row => ({
+  slug: row['網址代號'] || '',
+  category: row['分類'] || '選琴知識',
+  title: row['標題'] || '',
+  excerpt: row['摘要'] || '',
+  image: driveToImage(row['封面圖片'] || ''),
+  published: row['發布日期'] || '',
+  updated: row['更新日期'] || row['發布日期'] || '',
+  readTime: row['閱讀時間'] || '',
+  seoTitle: row['SEO_Title'] || '',
+  seoDescription: row['SEO_Description'] || row['摘要'] || '',
+  body: row['內文'] || ''
+})
+
+function KnowledgeIndex({ articles, onOpenArticle }) {
   return <section className="page-shell knowledge-page">
     <div className="page-title knowledge-title"><p className="eyebrow">GUITAR GUIDE</p><h1>選琴知識</h1><p className="page-intro">不只看規格，從預算、材質與實際演奏需求，找到真正適合你的吉他。</p></div>
-    <div className="knowledge-grid">{KNOWLEDGE_ARTICLES.map(article => <article className="knowledge-card" key={article.slug}>
-      <div className="knowledge-card-visual" aria-hidden="true"><span>GW</span><b>選琴指南</b></div>
-      <div className="knowledge-card-copy"><p className="eyebrow">{article.category}</p><h2>{article.title}</h2><p>{article.excerpt}</p><div className="knowledge-meta"><span>更新：2026 年 7 月</span><span>{article.readTime}</span></div><button className="knowledge-link" onClick={() => onOpenArticle(article.slug)}>閱讀完整文章 <span>→</span></button></div>
+    <div className="knowledge-grid">{articles.map(article => <article className="knowledge-card" key={article.slug}>
+      <div className="knowledge-card-visual" aria-hidden="true">{article.image ? <img src={article.image} alt=""/> : <><span>GW</span><b>選琴指南</b></>}</div>
+      <div className="knowledge-card-copy"><p className="eyebrow">{article.category}</p><h2>{article.title}</h2><p>{article.excerpt}</p><div className="knowledge-meta"><span>更新：{article.updated}</span><span>{article.readTime}</span></div><button className="knowledge-link" onClick={() => onOpenArticle(article.slug)}>閱讀完整文章 <span>→</span></button></div>
     </article>)}</div>
   </section>
+}
+
+const inlineText = text => String(text || '').split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+  part.startsWith('**') && part.endsWith('**') ? <strong key={index}>{part.slice(2, -2)}</strong> : part
+)
+
+function MarkdownArticle({ body }) {
+  const lines = String(body || '').replace(/\r/g, '').split('\n')
+  const blocks = []
+  for (let i = 0; i < lines.length;) {
+    const line = lines[i].trim()
+    if (!line) { i += 1; continue }
+    if (line.startsWith('|') && lines[i + 1]?.trim().match(/^\|[\s:|-]+\|$/)) {
+      const rows = []
+      rows.push(line.split('|').slice(1, -1).map(cell => cell.trim()))
+      i += 2
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        rows.push(lines[i].trim().split('|').slice(1, -1).map(cell => cell.trim()))
+        i += 1
+      }
+      blocks.push(<div className="guide-table-wrap" key={`table-${i}`}><table className="guide-table"><thead><tr>{rows[0].map((cell, x) => <th key={x}>{inlineText(cell)}</th>)}</tr></thead><tbody>{rows.slice(1).map((row, y) => <tr key={y}>{row.map((cell, x) => x === 0 ? <th key={x}>{inlineText(cell)}</th> : <td key={x}>{inlineText(cell)}</td>)}</tr>)}</tbody></table></div>)
+      continue
+    }
+    if (line.startsWith('- ')) {
+      const items = []
+      while (i < lines.length && lines[i].trim().startsWith('- ')) {
+        items.push(lines[i].trim().slice(2))
+        i += 1
+      }
+      blocks.push(<ul key={`list-${i}`}>{items.map((item, x) => <li key={x}>{inlineText(item)}</li>)}</ul>)
+      continue
+    }
+    if (line.startsWith('## ')) blocks.push(<h2 key={i}>{line.slice(3)}</h2>)
+    else if (line.startsWith('> ')) blocks.push(<div className="guide-callout" key={i}>{inlineText(line.slice(2))}</div>)
+    else blocks.push(<p key={i}>{inlineText(line)}</p>)
+    i += 1
+  }
+  return blocks
+}
+
+function SheetKnowledgeArticle({ article, onBack, onProducts, onAdvisor }) {
+  return <article className="guide-article">
+    <header className="guide-hero"><button className="product-back" onClick={onBack}>← 返回選琴知識</button><p className="eyebrow">{article.category}</p><h1>{article.title}</h1><p className="guide-lead">{article.excerpt}</p><div className="knowledge-meta"><span>吉他工坊編輯</span><span>更新於 {article.updated}</span><span>{article.readTime}</span></div></header>
+    <div className="guide-layout"><aside className="guide-summary"><p className="eyebrow">GUITAR GUIDE</p><h2>選琴知識</h2><p>從預算、材質與實際演奏需求，找到真正適合你的吉他。</p></aside><div className="guide-content"><MarkdownArticle body={article.body}/><section className="guide-cta"><p className="eyebrow">NEXT STEP</p><h2>還是不確定哪一把適合你？</h2><p>告訴我們預算、程度與主要用途，先從目前商品中縮小範圍。</p><div className="hero-actions left"><button className="primary" onClick={onAdvisor}>使用 AI 選琴</button><button className="link-button dark" onClick={onProducts}>查看全部商品 →</button></div></section></div></div>
+  </article>
 }
 
 function KnowledgeArticle({ onBack, onProducts, onAdvisor }) {
@@ -372,9 +431,11 @@ export default function App() {
 
     return () => { cancelled = true }
   }, [])
-  const safeData = data || { brands: [], products: [], specs: [], ai: [], photos: [], features: [], settings: [] }
+  const safeData = data || { brands: [], products: [], specs: [], ai: [], photos: [], features: [], settings: [], articles: [] }
   const brands = safeData.brands.filter(b => truthy(b['是否顯示']))
   const products = safeData.products.filter(isPublished)
+  const sheetArticles = (safeData.articles || []).filter(row => truthy(row['是否發布'])).map(articleFromRow).filter(article => article.slug && article.title)
+  const articles = sheetArticles.length ? sheetArticles : KNOWLEDGE_ARTICLES
   const itemFor = p => {
     const clean = value => String(value ?? '').trim()
     const normalizeModel = value => clean(value).toUpperCase().replace(/\s+/g, ' ').replace(/[–—]/g, '-')
@@ -483,6 +544,7 @@ export default function App() {
   const currentBrandProducts = currentBrand ? products.filter(p=>p['品牌ID']===currentBrand['品牌ID']).slice(0,4) : []
   const currentProduct = productSlug ? products.find(p => p.slug === productSlug) : null
   const currentProductItem = currentProduct ? itemFor(currentProduct) : null
+  const currentArticle = articleSlug ? articles.find(article => article.slug === articleSlug) : null
 
   useEffect(() => {
     const base = 'https://guitarworkshop.github.io/guitar-workshop'
@@ -505,9 +567,10 @@ export default function App() {
     } else if (view === 'knowledge') {
       title = '選琴知識｜初學吉他選購與保養指南｜吉他工坊'
       description = '吉他工坊選琴知識，從預算、合板面單全單、尺寸、木材與手感，幫助初學者選到真正適合的吉他。'
-    } else if (view === 'article' && articleSlug === 'solid-top-vs-laminate') {
-      title = '合板、面單、全單吉他差在哪？初學者選琴指南｜吉他工坊'
-      description = '完整比較合板、面單與全單吉他的結構、聲音、價格、耐候性與適合對象，幫助初學者依預算選到不容易後悔的吉他。'
+    } else if (view === 'article' && currentArticle) {
+      title = currentArticle.seoTitle || `${currentArticle.title}｜吉他工坊`
+      description = currentArticle.seoDescription || currentArticle.excerpt
+      image = currentArticle.image || ''
     }
 
     document.title = title
@@ -598,14 +661,15 @@ export default function App() {
           { '@type': 'ListItem', position: 3, name: product['型號'], item: canonical }
         ]
       })
-    } else if (view === 'article' && articleSlug === 'solid-top-vs-laminate') {
+    } else if (view === 'article' && currentArticle) {
       schemas.push({
         '@context': 'https://schema.org',
         '@type': 'Article',
-        headline: '合板、面單、全單吉他差在哪？',
+        headline: currentArticle.title,
         description,
-        datePublished: '2026-07-29',
-        dateModified: '2026-07-29',
+        image: currentArticle.image || undefined,
+        datePublished: currentArticle.published || undefined,
+        dateModified: currentArticle.updated || currentArticle.published || undefined,
         inLanguage: 'zh-Hant-TW',
         author: { '@type': 'Organization', name: '吉他工坊', url: `${base}/` },
         publisher: { '@id': `${base}/#business` },
@@ -616,13 +680,13 @@ export default function App() {
         itemListElement: [
           { '@type': 'ListItem', position: 1, name: '首頁', item: `${base}/` },
           { '@type': 'ListItem', position: 2, name: '選琴知識', item: `${base}/knowledge/` },
-          { '@type': 'ListItem', position: 3, name: '合板、面單、全單吉他差異', item: canonical }
+          { '@type': 'ListItem', position: 3, name: currentArticle.title, item: canonical }
         ]
       })
     }
     pageSchema.textContent = JSON.stringify(schemas)
     document.head.appendChild(pageSchema)
-  }, [locationPath, view, currentBrand, currentBrandContent.intro, currentProductItem])
+  }, [locationPath, view, currentBrand, currentBrandContent.intro, currentProductItem, currentArticle])
 
   if (!data) return <div className="loading"><GuitarArt compact/><p>正在載入吉他工坊...</p></div>
 
@@ -640,7 +704,7 @@ export default function App() {
 
       <section className="advisor-hero"><div><p className="eyebrow">GUITAR ADVISOR</p><h2>不知道從哪一把開始？</h2><p>告訴我們預算、程度與用途，快速取得三個建議。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始選琴</button></div><div className="advisor-orb">AI</div></section>
 
-      <section className="section knowledge-home"><div className="center-head"><p className="eyebrow">GUITAR GUIDE</p><h2>第一次選琴，先看懂差異</h2><p>從材質與預算開始，少走一次不必要的升級路。</p></div><button className="knowledge-feature" onClick={()=>navigate('/knowledge/solid-top-vs-laminate')}><span><small>選琴基礎・約 7 分鐘</small><b>合板、面單、全單吉他差在哪？</b></span><em>閱讀指南 →</em></button></section>
+      {articles[0] && <section className="section knowledge-home"><div className="center-head"><p className="eyebrow">GUITAR GUIDE</p><h2>第一次選琴，先看懂差異</h2><p>從材質與預算開始，少走一次不必要的升級路。</p></div><button className="knowledge-feature" onClick={()=>navigate(`/knowledge/${articles[0].slug}`)}><span><small>{articles[0].category}・{articles[0].readTime}</small><b>{articles[0].title}</b></span><em>閱讀指南 →</em></button></section>}
     </>}
 
     {view === 'brands' && <section className="page-shell brands-page"><div className="page-title"><p className="eyebrow">OUR BRANDS</p><h1>探索品牌</h1><p className="page-intro">四種聲音性格，找到與你最契合的那一把。</p></div><div className="brand-page-grid">{brands.map((b,i)=>{const c=BRAND_CONTENT[normalizeBrand(b['品牌名稱'])]; return <article className="brand-story-card" key={b['品牌ID']} style={{'--brand-image': `url("${brandImage(b['品牌名稱'])}")`}}><div className="brand-story-copy"><p className="eyebrow">{c?.position || `0${i+1}`}</p><h2>{b['品牌名稱']}</h2><p>{c?.motto || b['品牌簡介']}</p><button className="brand-cta" onClick={()=>openBrand(b)}>閱讀品牌故事 <span aria-hidden="true">→</span></button></div></article>})}</div></section>}
@@ -655,10 +719,10 @@ export default function App() {
 
     {view === 'product' && (currentProductItem ? <ProductDetail item={currentProductItem} onBack={()=>navigate('/products')}/> : <section className="page-shell"><div className="page-title"><p className="eyebrow">PRODUCT NOT FOUND</p><h1>找不到這項商品</h1><button className="primary" onClick={()=>navigate('/products')}>返回全部商品</button></div></section>)}
 
-    {view === 'knowledge' && <KnowledgeIndex onOpenArticle={slug=>navigate(`/knowledge/${slug}`)}/>}
+    {view === 'knowledge' && <KnowledgeIndex articles={articles} onOpenArticle={slug=>navigate(`/knowledge/${slug}`)}/>}
 
-    {view === 'article' && (articleSlug === 'solid-top-vs-laminate'
-      ? <KnowledgeArticle onBack={()=>navigate('/knowledge')} onProducts={()=>navigate('/products')} onAdvisor={()=>setAdvisor(true)}/>
+    {view === 'article' && (currentArticle
+      ? <SheetKnowledgeArticle article={currentArticle} onBack={()=>navigate('/knowledge')} onProducts={()=>navigate('/products')} onAdvisor={()=>setAdvisor(true)}/>
       : <section className="page-shell"><div className="page-title"><p className="eyebrow">ARTICLE NOT FOUND</p><h1>找不到這篇文章</h1><button className="primary" onClick={()=>navigate('/knowledge')}>返回選琴知識</button></div></section>)}
 
     {view === 'about' && <section className="page-shell about-page"><div className="page-title"><p className="eyebrow">ABOUT GUITAR WORKSHOP</p><h1>吉他不只是規格，<br/>更重要的是手感與聲音。</h1></div><div className="about-grid"><div className="about-art">{aboutItem?.image ? <img src={aboutItem.image} alt={`${aboutItem.brand?.['品牌名稱'] || '吉他工坊'} ${aboutItem.product?.['型號'] || '精選吉他'}`} className="about-product-image"/> : <GuitarArt/>}</div><div><p>吉他工坊提供木吉他與相關樂器的銷售、選琴諮詢及出貨前調整。我們不只比較品牌，而是從預算、材料、桶身與演奏需求，協助你選到真正適合長期使用的樂器。</p><p>所有上架商品以 Google Sheets 作為主要資料來源，品牌故事與技術內容則以實際型錄、產品資料與我們的品牌定位為基礎。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始 AI 選琴</button></div></div></section>}

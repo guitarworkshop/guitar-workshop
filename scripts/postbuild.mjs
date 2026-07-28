@@ -29,6 +29,8 @@ const knownHeaders = [
   '品牌名稱', '品牌介紹', '品牌簡介', '是否顯示',
   '面板結構', '面板木材', '側背板木材',
   '照片ID', '照片類型', 'GoogleDrive連結', '排序', '網站顯示'
+  , '文章ID', '網址代號', '標題', '分類', '摘要', '封面圖片', '發布日期', '更新日期',
+  '閱讀時間', '是否發布', '內文'
 ]
 const canonicalHeader = value => {
   const header = clean(value)
@@ -40,7 +42,7 @@ const canonicalHeader = value => {
 function rowsToObjects(rows) {
   const headerIndex = rows.slice(0, 15).findIndex(row => {
     const cells = row.map(clean)
-    return cells.some(cell => cell.includes('商品ID') || cell.includes('品牌ID') || cell.includes('設定ID'))
+    return cells.some(cell => cell.includes('商品ID') || cell.includes('品牌ID') || cell.includes('設定ID') || cell.includes('文章ID'))
   })
   if (headerIndex < 0) return []
   const headers = rows[headerIndex].map(canonicalHeader)
@@ -60,13 +62,14 @@ async function fetchSheet(name) {
 
 let data = fallback
 try {
-  const [brands, products, specs, photos] = await Promise.all([
+  const [brands, products, specs, photos, articles] = await Promise.all([
     fetchSheet('01_品牌'),
     fetchSheet('03_商品'),
     fetchSheet('04_規格'),
-    fetchSheet('06_照片')
+    fetchSheet('06_照片'),
+    fetchSheet('20_選琴知識')
   ])
-  data = { ...fallback, brands, products, specs, photos }
+  data = { ...fallback, brands, products, specs, photos, articles }
   console.log(`SEO data: Google Sheets (${products.length} products)`)
 } catch (error) {
   console.warn(`SEO data fallback: ${error.message}`)
@@ -79,6 +82,13 @@ const products = (data.products || [])
   .map(product => ({
     ...product,
     slug: slugify(product['Slug'] || product['網址代號'] || product['型號'] || product['商品ID'])
+  }))
+const articles = (data.articles || [])
+  .filter(article => clean(article['文章ID']) || clean(article['標題']))
+  .filter(article => truthy(article['是否發布']))
+  .map(article => ({
+    ...article,
+    slug: slugify(article['網址代號'] || article['標題'] || article['文章ID'])
   }))
 
 const brandById = new Map(brands.map(brand => [clean(brand['品牌ID']), brand]))
@@ -198,33 +208,40 @@ await writeRoute('/knowledge/', {
   description: '吉他工坊選琴知識，從預算、合板面單全單、尺寸、木材與手感，幫助初學者選到真正適合的吉他。',
   canonical: `${base}/knowledge/`
 })
-const guideRoute = '/knowledge/solid-top-vs-laminate/'
-routes.push(guideRoute)
-await writeRoute(guideRoute, {
-  title: '合板、面單、全單吉他差在哪？初學者選琴指南｜吉他工坊',
-  description: '完整比較合板、面單與全單吉他的結構、聲音、價格、耐候性與適合對象，幫助初學者依預算選到不容易後悔的吉他。',
-  canonical: `${base}${guideRoute}`,
-  schema: [{
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: '合板、面單、全單吉他差在哪？',
-    description: '完整比較合板、面單與全單吉他的結構、聲音、價格、耐候性與適合對象。',
-    datePublished: '2026-07-29',
-    dateModified: '2026-07-29',
-    inLanguage: 'zh-Hant-TW',
-    author: { '@type': 'Organization', name: '吉他工坊', url: `${base}/` },
-    publisher: { '@id': `${base}/#business` },
-    mainEntityOfPage: `${base}${guideRoute}`
-  }, {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: '首頁', item: `${base}/` },
-      { '@type': 'ListItem', position: 2, name: '選琴知識', item: `${base}/knowledge/` },
-      { '@type': 'ListItem', position: 3, name: '合板、面單、全單吉他差異', item: `${base}${guideRoute}` }
-    ]
-  }]
-})
+for (const article of articles) {
+  const articleRoute = `/knowledge/${encodeURIComponent(article.slug)}/`
+  const canonical = `${base}${articleRoute}`
+  const description = article['SEO_Description'] || article['摘要'] || `${article['標題']}｜吉他工坊選琴知識`
+  const image = driveToImage(article['封面圖片'])
+  routes.push(articleRoute)
+  await writeRoute(articleRoute, {
+    title: article['SEO_Title'] || `${article['標題']}｜吉他工坊`,
+    description,
+    canonical,
+    image,
+    schema: [{
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: article['標題'],
+      description,
+      image: image || undefined,
+      datePublished: article['發布日期'] || undefined,
+      dateModified: article['更新日期'] || article['發布日期'] || undefined,
+      inLanguage: 'zh-Hant-TW',
+      author: { '@type': 'Organization', name: '吉他工坊', url: `${base}/` },
+      publisher: { '@id': `${base}/#business` },
+      mainEntityOfPage: canonical
+    }, {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: '首頁', item: `${base}/` },
+        { '@type': 'ListItem', position: 2, name: '選琴知識', item: `${base}/knowledge/` },
+        { '@type': 'ListItem', position: 3, name: article['標題'], item: canonical }
+      ]
+    }]
+  })
+}
 await writeRoute('/about/', {
   title: '關於吉他工坊｜台中吉他銷售・專業調整・選琴諮詢',
   description: '認識吉他工坊的選琴理念、專業技師調整與品質檢測服務，協助演奏者找到適合長期使用的吉他。',
@@ -299,4 +316,4 @@ for (const product of products) {
 const today = new Date().toISOString().slice(0, 10)
 const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(routes)].map(route => `  <url>\n    <loc>${base}${route}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`).join('\n')}\n</urlset>\n`
 await writeFile('dist/sitemap.xml', xml)
-console.log(`Created static SEO pages and sitemap (${products.length} products)`)
+console.log(`Created static SEO pages and sitemap (${products.length} products, ${articles.length} articles)`)

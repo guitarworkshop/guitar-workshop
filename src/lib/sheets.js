@@ -2,7 +2,8 @@ import fallback from '../data/fallback.json'
 
 const SHEET_NAMES = {
   brands: '01_品牌', series: '02_系列', products: '03_商品', specs: '04_規格',
-  photos: '06_照片', features: '07_特色', ai: '08_AI推薦', settings: '09_網站設定'
+  photos: '06_照片', features: '07_特色', ai: '08_AI推薦', settings: '09_網站設定',
+  articles: '20_選琴知識'
 }
 
 function parseGviz(text) {
