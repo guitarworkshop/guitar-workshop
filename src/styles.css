@@ -35,6 +35,73 @@
 @media(max-width:1050px){.hero-product-image{height:560px;opacity:.62}.brand-panel-image{right:-3%;width:46%;opacity:.64}.brand-detail-image{height:560px;opacity:.34}.about-product-image{height:500px}}
 @media(max-width:720px){.hero-product-image{height:470px;transform:translateY(70px);opacity:.48}.brand-panel-image{right:-12%;width:58%;height:80%;opacity:.5}.brand-page-image{height:310px}.brand-detail-image{height:480px;opacity:.22}.about-product-image{height:390px}}
 
+/* V5 Guitar Workshop homepage banner */
+.home-hero-banner{
+  position:relative;
+  isolation:isolate;
+  min-height:760px;
+  padding:128px 5.5vw 72px;
+  display:flex;
+  align-items:center;
+  background:
+    linear-gradient(90deg,rgba(250,246,238,.98) 0%,rgba(250,246,238,.88) 30%,rgba(250,246,238,.12) 58%,rgba(250,246,238,0) 100%),
+    url("/guitar-workshop/images/hero/guitar-workshop-hero.webp") 68% center/cover no-repeat;
+}
+.home-hero-banner .hero-copy{
+  width:min(680px,48vw);
+  max-width:none;
+  padding:0;
+}
+.home-hero-banner .hero h1,
+.home-hero-banner h1{
+  font-size:clamp(54px,4.7vw,82px);
+  line-height:1.12;
+  text-wrap:balance;
+}
+
+@media(max-width:920px){
+  .home-hero-banner{
+    min-height:780px;
+    padding:108px 7vw 52px;
+    align-items:flex-start;
+    background:
+      linear-gradient(180deg,rgba(250,246,238,.98) 0%,rgba(250,246,238,.9) 42%,rgba(250,246,238,.2) 68%,rgba(250,246,238,.04) 100%),
+      url("/guitar-workshop/images/hero/guitar-workshop-hero.webp") 68% center/cover no-repeat;
+  }
+  .home-hero-banner .hero-copy{
+    width:min(650px,86vw);
+    padding:28px 0 0;
+  }
+}
+
+@media(max-width:720px){
+  .home-hero-banner{
+    min-height:760px;
+    padding:92px 24px 36px;
+    background:
+      linear-gradient(180deg,rgba(250,246,238,.98) 0%,rgba(250,246,238,.92) 43%,rgba(250,246,238,.18) 67%,rgba(250,246,238,.03) 100%),
+      url("/guitar-workshop/images/hero/guitar-workshop-hero.webp") 67% center/cover no-repeat;
+  }
+  .home-hero-banner .hero-copy{
+    width:100%;
+    padding:0;
+  }
+  .home-hero-banner .hero-copy .eyebrow{
+    margin-bottom:18px;
+  }
+  .home-hero-banner h1{
+    max-width:11em;
+    font-size:clamp(42px,12vw,58px);
+    line-height:1.12;
+  }
+  .home-hero-banner .hero-rule{
+    margin:22px 0 18px;
+  }
+  .home-hero-banner .hero-copy>p:not(.eyebrow){
+    max-width:19em;
+  }
+}
+
 /* Brand editorial banners */
 .brand-showcase{
   gap:14px;
