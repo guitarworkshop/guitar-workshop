@@ -13,6 +13,38 @@ const money = value => {
   const number = parsePrice(value)
   return number == null ? '價格洽詢' : `NT$ ${number.toLocaleString('zh-TW')}`
 }
+
+const merchantReturnPolicy = {
+  '@type': 'MerchantReturnPolicy',
+  applicableCountry: 'TW',
+  returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+  merchantReturnDays: 7,
+  returnMethod: 'https://schema.org/ReturnByMail',
+  returnFees: 'https://schema.org/ReturnShippingFees'
+}
+
+const offerShippingDetails = {
+  '@type': 'OfferShippingDetails',
+  shippingDestination: {
+    '@type': 'DefinedRegion',
+    addressCountry: 'TW'
+  },
+  deliveryTime: {
+    '@type': 'ShippingDeliveryTime',
+    handlingTime: {
+      '@type': 'QuantitativeValue',
+      minValue: 1,
+      maxValue: 3,
+      unitCode: 'DAY'
+    },
+    transitTime: {
+      '@type': 'QuantitativeValue',
+      minValue: 1,
+      maxValue: 3,
+      unitCode: 'DAY'
+    }
+  }
+}
 const getSetting = (data, id, fallback = '') => data?.settings?.find(x => x['設定ID'] === id)?.['設定值'] || fallback
 const isPublished = product =>
   product?.['Published'] !== ''
@@ -245,6 +277,15 @@ function ProductDetail({ item, onBack }) {
           <div className="video-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${youtubeId}`} title={`${product['型號']} 試聽與介紹`} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>
         </section>}
         {!youtubeId && videoUrl && <a className="video-link" href={videoUrl} target="_blank" rel="noreferrer">觀看試聽／介紹影片 ↗</a>}
+        <section className="purchase-policy" aria-labelledby="purchase-policy-title">
+          <h2 id="purchase-policy-title">配送與退貨說明</h2>
+          <dl>
+            <div><dt>配送範圍</dt><dd>台灣地區</dd></div>
+            <div><dt>運費</dt><dd>依商品與配送地區另行報價，訂購前請先洽詢確認。</dd></div>
+            <div><dt>配送時間</dt><dd>確認訂購後 1～3 天出貨，寄出後約 1～3 天送達。</dd></div>
+            <div><dt>退貨申請</dt><dd>收到商品後 7 天內可提出申請；非商品瑕疵退貨，退回運費由買家負擔。</dd></div>
+          </dl>
+        </section>
         <a className="primary full" href="#contact">洽詢這把吉他</a>
       </div>
     </div>
@@ -482,7 +523,11 @@ export default function App() {
           availability: String(product['庫存狀態'] || '').includes('缺貨')
             ? 'https://schema.org/OutOfStock'
             : 'https://schema.org/InStock',
-          url: canonical
+          url: canonical,
+          itemCondition: 'https://schema.org/NewCondition',
+          seller: { '@id': `${base}/#business` },
+          shippingDetails: offerShippingDetails,
+          hasMerchantReturnPolicy: merchantReturnPolicy
         } : undefined,
         additionalProperty: Object.entries(spec || {})
           .filter(([key, value]) => value && !['商品ID', '型號'].includes(key))

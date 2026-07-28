@@ -102,6 +102,49 @@
   }
 }
 
+.purchase-policy{
+  margin:32px 0 24px;
+  padding:24px;
+  border:1px solid #e4ded6;
+  border-radius:14px;
+  background:#faf8f5;
+}
+.purchase-policy h2{
+  margin:0 0 16px;
+  font-size:20px;
+}
+.purchase-policy dl{
+  margin:0;
+}
+.purchase-policy dl div{
+  display:grid;
+  grid-template-columns:92px 1fr;
+  gap:14px;
+  padding:11px 0;
+  border-top:1px solid #e9e3dc;
+}
+.purchase-policy dl div:first-child{
+  border-top:0;
+  padding-top:0;
+}
+.purchase-policy dt{
+  font-weight:700;
+}
+.purchase-policy dd{
+  margin:0;
+  color:#625c55;
+  line-height:1.7;
+}
+@media(max-width:520px){
+  .purchase-policy{
+    padding:20px 18px;
+  }
+  .purchase-policy dl div{
+    grid-template-columns:1fr;
+    gap:4px;
+  }
+}
+
 /* Brand editorial banners */
 .brand-showcase{
   gap:14px;

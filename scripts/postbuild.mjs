@@ -70,6 +70,38 @@ const products = (data.products || [])
 const brandById = new Map(brands.map(brand => [clean(brand['品牌ID']), brand]))
 const specByProductId = new Map((data.specs || []).map(spec => [clean(spec['商品ID']), spec]))
 
+const merchantReturnPolicy = {
+  '@type': 'MerchantReturnPolicy',
+  applicableCountry: 'TW',
+  returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+  merchantReturnDays: 7,
+  returnMethod: 'https://schema.org/ReturnByMail',
+  returnFees: 'https://schema.org/ReturnShippingFees'
+}
+
+const offerShippingDetails = {
+  '@type': 'OfferShippingDetails',
+  shippingDestination: {
+    '@type': 'DefinedRegion',
+    addressCountry: 'TW'
+  },
+  deliveryTime: {
+    '@type': 'ShippingDeliveryTime',
+    handlingTime: {
+      '@type': 'QuantitativeValue',
+      minValue: 1,
+      maxValue: 3,
+      unitCode: 'DAY'
+    },
+    transitTime: {
+      '@type': 'QuantitativeValue',
+      minValue: 1,
+      maxValue: 3,
+      unitCode: 'DAY'
+    }
+  }
+}
+
 function updateTag(html, pattern, replacement) {
   return pattern.test(html) ? html.replace(pattern, replacement) : html.replace('</head>', `    ${replacement}\n  </head>`)
 }
@@ -172,7 +204,11 @@ for (const product of products) {
       priceCurrency: 'TWD',
       price,
       availability: clean(product['庫存狀態']).includes('缺貨') ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-      url: canonical
+      url: canonical,
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@id': `${base}/#business` },
+      shippingDetails: offerShippingDetails,
+      hasMerchantReturnPolicy: merchantReturnPolicy
     } : undefined
   }, {
     '@context': 'https://schema.org',
