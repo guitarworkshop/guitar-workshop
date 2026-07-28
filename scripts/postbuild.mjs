@@ -10,6 +10,7 @@ const template = await readFile('dist/index.html', 'utf8')
 const clean = value => String(value ?? '').trim()
 const truthy = value => ['是', 'true', '1', 'yes', 'y'].includes(clean(value).toLowerCase())
 const slugify = value => clean(value).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'product'
+const brandSlugify = value => clean(value).toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-').replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'brand'
 const escapeHtml = value => clean(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 const normalizeModel = value => clean(value).toUpperCase().replace(/\s+/g, ' ').replace(/[–—]/g, '-')
 const driveToImage = url => {
@@ -201,18 +202,23 @@ await writeRoute('/about/', {
 for (const brand of brands) {
   const brandName = brand['品牌名稱'] || '吉他品牌'
   const brandId = encodeURIComponent(brand['品牌ID'])
-  routes.push(`/brands/${brandId}/`)
-  await writeRoute(`/brands/${brandId}/`, {
+  const brandSlug = encodeURIComponent(brandSlugify(brandName))
+  const brandRoute = `/brand/${brandSlug}/`
+  const legacyRoute = `/brands/${brandId}/`
+  routes.push(brandRoute)
+  const brandOptions = {
     title: `${brandName} 吉他｜品牌介紹與商品｜吉他工坊`,
     description: brand['品牌簡介'] || brand['品牌介紹'] || `探索 ${brandName} 品牌故事、吉他特色與目前上架商品。`,
-    canonical: `${base}/brands/${brandId}/`,
+    canonical: `${base}${brandRoute}`,
     schema: {
       '@context': 'https://schema.org',
       '@type': 'Brand',
       name: brandName,
-      url: `${base}/brands/${brandId}/`
+      url: `${base}${brandRoute}`
     }
-  })
+  }
+  await writeRoute(brandRoute, brandOptions)
+  await writeRoute(legacyRoute, brandOptions)
 }
 
 for (const product of products) {

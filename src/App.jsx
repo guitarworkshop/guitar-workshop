@@ -411,9 +411,19 @@ export default function App() {
   const phone=getSetting(safeData,'phone','0930-223-729'), line=getSetting(safeData,'line_url','#'), address=getSetting(safeData,'address','台中市東區十甲東路291號')
 
   const path = locationPath
+  const brandSlug = value => String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/\./g, '-')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
   const productSlug = path.startsWith('/product/') ? decodeURIComponent(path.split('/')[2] || '') : ''
-  const brandIdFromPath = path.startsWith('/brands/') ? decodeURIComponent(path.split('/')[2] || '') : ''
-  const view = productSlug ? 'product' : brandIdFromPath ? 'brand' : path === '/brands' ? 'brands' : path === '/products' ? 'products' : path === '/about' ? 'about' : 'home'
+  const brandPathValue = path.startsWith('/brand/') || path.startsWith('/brands/')
+    ? decodeURIComponent(path.split('/')[2] || '')
+    : ''
+  const view = productSlug ? 'product' : brandPathValue ? 'brand' : path === '/brands' ? 'brands' : path === '/products' ? 'products' : path === '/about' ? 'about' : 'home'
   const navigate = target => {
     const routes = { home: '/', brands: '/brands', products: '/products', about: '/about' }
     const next = routes[target] || target
@@ -422,9 +432,12 @@ export default function App() {
     window.scrollTo({top:0,behavior:'smooth'})
   }
   const goProducts = brandId => { setBrandFilter(brandId || 'all'); navigate('/products') }
-  const openBrand = b => navigate(`/brands/${encodeURIComponent(b['品牌ID'])}`)
+  const openBrand = b => navigate(`/brand/${encodeURIComponent(brandSlug(b['品牌名稱']) || b['品牌ID'])}`)
   const openProduct = p => navigate(`/product/${encodeURIComponent(p.slug)}`)
-  const currentBrand = brands.find(b => String(b['品牌ID']) === brandIdFromPath)
+  const currentBrand = brands.find(b =>
+    String(b['品牌ID']) === brandPathValue ||
+    brandSlug(b['品牌名稱']) === String(brandPathValue).toLowerCase()
+  )
   const currentBrandKey = normalizeBrand(currentBrand?.['品牌名稱'])
   const currentBrandContent = BRAND_CONTENT[currentBrandKey] || {
     position: currentBrand?.['品牌類型'] || 'BRAND', motto: 'Discover Your Sound.', title: currentBrand?.['品牌名稱'], intro: currentBrand?.['品牌簡介'] || '探索品牌理念與目前上架商品。', highlights: []
