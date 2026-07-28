@@ -1,47 +1,37 @@
-# 吉他工坊正式官網
+# 吉他工坊 v3（商品獨立網址版）
 
-React + Vite + GitHub Pages 專案，已內建 `吉他工坊_Master_Database_V4_FINAL.xlsx` 的現有資料快照，並預留 Google Sheets 即時連動。
+本版本保留原有首頁、品牌頁、Google Sheets 資料、圖片讀取與 AI 選琴，並新增：
 
-## 上傳 GitHub
+- 商品獨立網址：`/product/<slug>`
+- 品牌獨立網址：`/brands/<品牌ID>`
+- 瀏覽器上一頁／下一頁支援
+- 每項商品動態 Title、Description、Canonical、Open Graph
+- Product JSON-LD 結構化資料
+- 建置時自動建立 `404.html`，支援 GitHub Pages 直接開啟深層網址
+- 建置時依內建備援商品建立 `sitemap.xml`
 
-1. 將本資料夾內所有檔案覆蓋到本機 `guitar-workshop` Repository。
-2. GitHub Desktop 輸入摘要後按 **Commit to main**。
-3. 按 **Push origin**。
-4. GitHub Repository → **Settings → Pages → Source** 改成 **GitHub Actions**。
-5. 等待 Actions 顯示綠色勾勾。
+## 本機測試
 
-網站網址：`https://guitarworkshop.github.io/guitar-workshop/`
-
-## 連接 Google Sheets
-
-1. 將 Excel 上傳至 Google Drive 並轉成 Google 試算表。
-2. 設定為「知道連結的任何人皆可檢視」，或發布到網路。
-3. Google Sheets 網址格式：
-   `https://docs.google.com/spreadsheets/d/這一段就是SHEET_ID/edit`
-4. 編輯 `public/site-config.json`：
-
-```json
-{
-  "googleSheetId": "貼上你的SHEET_ID",
-  "useGoogleSheets": true
-}
+```bash
+npm install
+npm run dev
 ```
 
-5. Commit、Push。網站之後會直接讀線上 Google Sheets。
+## 正式建置
 
-若 Google Sheets 尚未公開、網址錯誤或網路讀取失敗，網站會自動退回內建資料，不會白畫面。
+```bash
+npm run build
+```
 
-## 資料工作表
+建置完成後，`postbuild` 會自動建立 `dist/404.html` 與新版 Sitemap。
 
-網站目前會讀取：
-- 01_品牌
-- 02_系列
-- 03_商品
-- 04_規格
-- 05_顏色
-- 06_照片
-- 07_特色
-- 08_AI推薦
-- 09_網站設定
+## 商品網址來源
 
-注意：工作表名稱請保持不變。
+優先讀取 Google Sheets 商品表中的：
+
+1. `網址代號`
+2. `Slug`
+3. `型號`
+4. `商品ID`
+
+建議每項商品的 `網址代號` 使用英文小寫，例如 `d20-gac-plus`。

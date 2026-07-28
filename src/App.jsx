@@ -1,8 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadSiteData, truthy, driveToImage } from './data/loadData'
 import GuitarArt from './components/GuitarArt'
 
-const money = value => value === '' || value == null ? '價格洽詢' : `NT$ ${Number(value).toLocaleString('zh-TW')}`
+const parsePrice = value => {
+  if (value === '' || value == null) return null
+  const cleaned = String(value).replace(/[^0-9.-]/g, '')
+  const number = Number(cleaned)
+  return Number.isFinite(number) ? number : null
+}
+
+const money = value => {
+  const number = parsePrice(value)
+  return number == null ? '價格洽詢' : `NT$ ${number.toLocaleString('zh-TW')}`
+}
 const getSetting = (data, id, fallback = '') => data?.settings?.find(x => x['設定ID'] === id)?.['設定值'] || fallback
 
 const BRAND_CONTENT = {
@@ -91,19 +101,158 @@ function ProductCard({ item, onClick }) {
   </article>
 }
 
-function ProductModal({ item, onClose }) {
-  if (!item) return null
+function getYouTubeId(value) {
+  const url = String(value || '').trim()
+  if (!url) return ''
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{6,})/)
+  return match?.[1] || ''
+}
+
+function ProductDetail({ item, onBack }) {
   const { product, brand, spec, features } = item
   const fields = ['尺寸(吋)','桶身','缺角','面板結構','面板木材','側背板結構','側背板木材','琴頸','指板','琴橋','漆面','拾音器']
-  return <div className="modal-backdrop" onMouseDown={e => e.target === e.currentTarget && onClose()}><section className="modal"><button className="close" onClick={onClose}>×</button><div className="modal-grid"><div className="modal-art">{item.image ? <img src={item.image} alt={product['型號']} className="product-image-large"/> : <GuitarArt/>}</div><div><p className="eyebrow">{brand?.['品牌名稱']}</p><h2>{product['型號']}</h2><div className="price">{money(product['售價'])}</div><p className="service-note">出貨前由專業技師調整弦距與手感，完成檢測後出貨，確保正常、不打弦。</p><div className="feature-list">{features.map(f => <span key={f['特色ID'] || f['特色名稱']}>✓ {f['特色名稱']}</span>)}</div><h3>商品規格</h3><dl className="spec-list">{fields.map(k => spec?.[k] ? <div key={k}><dt>{k}</dt><dd>{spec[k]}</dd></div> : null)}</dl><a className="primary full" href="#contact" onClick={onClose}>洽詢這把吉他</a></div></div></section></div>
+  const images = item.images?.length ? item.images : (item.image ? [{ src: item.image, label: '主圖' }] : [])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [zoom, setZoom] = useState({ active: false, x: 50, y: 50 })
+  const touchStart = useRef(null)
+
+  useEffect(() => {
+    setActiveIndex(0)
+    setLightboxOpen(false)
+  }, [product['商品ID']])
+
+  const activeImage = images[activeIndex]
+  const showPrevious = () => setActiveIndex(index => (index - 1 + images.length) % images.length)
+  const showNext = () => setActiveIndex(index => (index + 1) % images.length)
+
+  useEffect(() => {
+    if (!lightboxOpen) return undefined
+    const onKeyDown = event => {
+      if (event.key === 'Escape') setLightboxOpen(false)
+      if (event.key === 'ArrowLeft' && images.length > 1) showPrevious()
+      if (event.key === 'ArrowRight' && images.length > 1) showNext()
+    }
+    document.body.classList.add('lightbox-open')
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.classList.remove('lightbox-open')
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [lightboxOpen, images.length])
+
+  const handlePointerMove = event => {
+    if (event.pointerType === 'touch') return
+    const rect = event.currentTarget.getBoundingClientRect()
+    setZoom({
+      active: true,
+      x: ((event.clientX - rect.left) / rect.width) * 100,
+      y: ((event.clientY - rect.top) / rect.height) * 100
+    })
+  }
+
+  const handleTouchStart = event => {
+    touchStart.current = event.touches[0]?.clientX ?? null
+  }
+
+  const handleTouchEnd = event => {
+    const startX = touchStart.current
+    const endX = event.changedTouches[0]?.clientX
+    touchStart.current = null
+    if (startX == null || endX == null || images.length < 2) return
+    const distance = endX - startX
+    if (Math.abs(distance) < 45) return
+    if (distance > 0) showPrevious()
+    else showNext()
+  }
+
+  const videoUrl = [
+    product['YouTube網址'], product['影片網址'], product['試聽網址'], product['YouTube'],
+    spec?.['YouTube網址'], spec?.['影片網址'], spec?.['試聽網址']
+  ].find(Boolean) || ''
+  const youtubeId = getYouTubeId(videoUrl)
+
+  return <section className="product-detail-page">
+    <button className="product-back" onClick={onBack}>← 返回全部商品</button>
+    <div className="product-detail-grid">
+      <div className="product-gallery">
+        <div
+          className={`product-detail-art ${zoom.active ? 'is-zooming' : ''}`}
+          onPointerMove={handlePointerMove}
+          onPointerLeave={() => setZoom(current => ({ ...current, active: false }))}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {activeImage ? <button
+            type="button"
+            className="gallery-main-button"
+            onClick={() => setLightboxOpen(true)}
+            aria-label="放大商品照片"
+          >
+            <img
+              src={activeImage.src}
+              alt={`${brand?.['品牌名稱'] || ''} ${product['型號']} ${activeImage.label || ''}`.trim()}
+              className="product-image-large"
+              style={{ transformOrigin: `${zoom.x}% ${zoom.y}%` }}
+            />
+            <span className="gallery-expand-hint">點擊放大</span>
+          </button> : <GuitarArt/>}
+          {images.length > 1 && <>
+            <button type="button" className="gallery-arrow previous" onClick={event => { event.stopPropagation(); showPrevious() }} aria-label="上一張照片">‹</button>
+            <button type="button" className="gallery-arrow next" onClick={event => { event.stopPropagation(); showNext() }} aria-label="下一張照片">›</button>
+            <span className="gallery-counter">{activeIndex + 1} / {images.length}</span>
+          </>}
+        </div>
+
+        {images.length > 1 && <div className="product-thumbnails" aria-label="商品照片縮圖">
+          {images.map((image, index) => <button
+            type="button"
+            key={`${image.src}-${index}`}
+            className={index === activeIndex ? 'active' : ''}
+            onClick={() => setActiveIndex(index)}
+            aria-label={`查看第 ${index + 1} 張照片${image.label ? `：${image.label}` : ''}`}
+          >
+            <img src={image.src} alt="" />
+            {image.label && <span>{image.label}</span>}
+          </button>)}
+        </div>}
+        {images.length > 1 && <p className="gallery-mobile-tip">手機可左右滑動照片</p>}
+      </div>
+
+      <div className="product-detail-copy">
+        <p className="eyebrow">{brand?.['品牌名稱']}</p>
+        <h1>{product['型號']}</h1>
+        <div className="price">{money(product['售價'])}</div>
+        <p className="service-note">出貨前由專業技師調整弦距與手感，完成檢測後出貨，確保正常、不打弦。</p>
+        <div className="feature-list">{features.map(f => <span key={f['特色ID'] || f['特色名稱']}>✓ {f['特色名稱']}</span>)}</div>
+        <h2>商品規格</h2>
+        <dl className="spec-list">{fields.map(k => spec?.[k] ? <div key={k}><dt>{k}</dt><dd>{spec[k]}</dd></div> : null)}</dl>
+        {youtubeId && <section className="product-video">
+          <h2>試聽與介紹</h2>
+          <div className="video-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${youtubeId}`} title={`${product['型號']} 試聽與介紹`} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>
+        </section>}
+        {!youtubeId && videoUrl && <a className="video-link" href={videoUrl} target="_blank" rel="noreferrer">觀看試聽／介紹影片 ↗</a>}
+        <a className="primary full" href="#contact">洽詢這把吉他</a>
+      </div>
+    </div>
+
+    {lightboxOpen && activeImage && <div className="image-lightbox" role="dialog" aria-modal="true" aria-label="商品照片瀏覽器" onMouseDown={event => event.target === event.currentTarget && setLightboxOpen(false)} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <button type="button" className="lightbox-close" onClick={() => setLightboxOpen(false)} aria-label="關閉照片">×</button>
+      {images.length > 1 && <button type="button" className="lightbox-arrow previous" onClick={showPrevious} aria-label="上一張照片">‹</button>}
+      <figure><img src={activeImage.src} alt={`${brand?.['品牌名稱'] || ''} ${product['型號']} ${activeImage.label || ''}`.trim()} /><figcaption>{activeImage.label || `${activeIndex + 1} / ${images.length}`}</figcaption></figure>
+      {images.length > 1 && <button type="button" className="lightbox-arrow next" onClick={showNext} aria-label="下一張照片">›</button>}
+      {images.length > 1 && <span className="lightbox-counter">{activeIndex + 1} / {images.length}</span>}
+    </div>}
+  </section>
 }
 
 function Advisor({ data, onClose, onPick }) {
   const [budget, setBudget] = useState(15000), [level, setLevel] = useState('初學'), [style, setStyle] = useState('彈唱'), [pickup, setPickup] = useState('不限')
   const ranked = useMemo(() => data.products.filter(p => truthy(p['是否上架']) && p['售價']).map(p => {
-    const spec = data.specs.find(s => s['商品ID'] === p['商品ID']) || {}, ai = data.ai.find(a => a['商品ID'] === p['商品ID']) || {}
-    let score = Math.max(0, 50 - Math.abs(Number(p['售價']) - budget) / 350)
-    if (Number(p['售價']) <= budget) score += 18
+    const spec = (data.specs || []).find(s => s['商品ID'] === p['商品ID']) || {}, ai = (data.ai || []).find(a => a['商品ID'] === p['商品ID']) || {}
+    const price = parsePrice(p['售價'])
+    let score = Math.max(0, 50 - Math.abs((price ?? budget) - budget) / 350)
+    if (price != null && price <= budget) score += 18
     const key = style === '指彈' ? '指彈適合度' : style === '刷奏' ? '刷奏適合度' : '演奏適合度'
     score += Number(ai[key] || 6) * 3
     if (level === '初學') score += Number(ai['初學適合度'] || 6) * 2
@@ -115,80 +264,235 @@ function Advisor({ data, onClose, onPick }) {
 }
 
 export default function App() {
-  const [data, setData] = useState(null), [view, setView] = useState('home'), [activeBrand, setActiveBrand] = useState(null), [brandFilter, setBrandFilter] = useState('all'), [search, setSearch] = useState(''), [selected, setSelected] = useState(null), [advisor, setAdvisor] = useState(false)
-  useEffect(() => { loadSiteData().then(setData) }, [])
-  if (!data) return <div className="loading"><GuitarArt compact/><p>正在載入吉他工坊...</p></div>
-  
-  const brands = data.brands.filter(b => truthy(b['是否顯示']))
-  const products = data.products.filter(p => truthy(p['是否上架']))
-  const itemFor = p => {
-    const productId = String(p['商品ID'] || '').trim()
+  const initialPath = window.location.pathname.replace(/^\/guitar-workshop/, '') || '/'
+  const [locationPath, setLocationPath] = useState(initialPath)
+  const [data, setData] = useState(null), [brandFilter, setBrandFilter] = useState('all'), [search, setSearch] = useState(''), [advisor, setAdvisor] = useState(false)
+  useEffect(() => {
+    const onPopState = () => setLocationPath(window.location.pathname.replace(/^\/guitar-workshop/, '') || '/')
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+  useEffect(() => {
+    let cancelled = false
 
-    const productPhotos = (data.photos || [])
-      .filter(ph => String(ph['商品ID'] || '').trim() === productId)
+    loadSiteData().then(result => {
+      if (!cancelled) setData(result)
+    })
+
+    return () => { cancelled = true }
+  }, [])
+  const safeData = data || { brands: [], products: [], specs: [], ai: [], photos: [], features: [], settings: [] }
+  const brands = safeData.brands.filter(b => truthy(b['是否顯示']))
+  const products = safeData.products.filter(p => truthy(p['是否上架']))
+  const itemFor = p => {
+    const clean = value => String(value ?? '').trim()
+    const normalizeModel = value => clean(value).toUpperCase().replace(/\s+/g, ' ').replace(/[–—]/g, '-')
+    const productId = clean(p['商品ID'])
+    const model = normalizeModel(p['型號'])
+    const matchesProduct = row => {
+      const rowId = clean(row?.['商品ID'])
+      const rowModel = normalizeModel(row?.['型號'])
+      return (productId && rowId === productId) || (model && rowModel === model)
+    }
+
+    const productPhotos = (safeData.photos || [])
+      .filter(ph => matchesProduct(ph) && (!ph['網站顯示'] || truthy(ph['網站顯示'])))
       .sort((a, b) => Number(a['排序'] || 9999) - Number(b['排序'] || 9999))
 
     const photo =
-      productPhotos.find(ph => String(ph['照片類型'] || '').trim() === '主圖') ||
+      productPhotos.find(ph => clean(ph['照片類型']) === '主圖') ||
       productPhotos[0]
 
     return {
       product: p,
-      brand: brands.find(b => String(b['品牌ID'] || '').trim() === String(p['品牌ID'] || '').trim()),
-      spec: data.specs.find(s => String(s['商品ID'] || '').trim() === productId),
-      features: data.features.filter(
-        f => String(f['商品ID'] || '').trim() === productId && truthy(f['是否顯示'])
-      ),
+      brand: brands.find(b => clean(b['品牌ID']) === clean(p['品牌ID'])),
+      spec: (safeData.specs || []).find(matchesProduct),
+      features: (safeData.features || [])
+        .filter(f => matchesProduct(f) && truthy(f['是否顯示']))
+        .sort((a, b) => Number(a['排序'] || 9999) - Number(b['排序'] || 9999)),
+      photos: productPhotos,
+      images: productPhotos
+        .map(ph => ({
+          src: driveToImage(ph?.['GoogleDrive連結'] || ''),
+          label: clean(ph?.['照片名稱']) || clean(ph?.['照片類型']) || '',
+          type: clean(ph?.['照片類型'])
+        }))
+        .filter(image => image.src),
       image: driveToImage(photo?.['GoogleDrive連結'] || '')
     }
   }
 
   const filtered = products.filter(p => (brandFilter === 'all' || p['品牌ID'] === brandFilter) && `${p['型號']} ${p['商品編號']}`.toLowerCase().includes(search.toLowerCase()))
   const featured = products.filter(p=>truthy(p['是否推薦']) || truthy(p['是否精選'])).slice(0,4)
-  const phone=getSetting(data,'phone','0930-223-729'), line=getSetting(data,'line_url','#'), address=getSetting(data,'address','台中市東區十甲東路291號')
 
-  const navigate = target => { setView(target); window.scrollTo({top:0,behavior:'smooth'}) }
-  const goProducts = brandId => { setBrandFilter(brandId || 'all'); navigate('products') }
-  const openBrand = b => { setActiveBrand(b); navigate('brand') }
-  const currentBrand = activeBrand
+  const representativeItemForBrand = brand => {
+    if (!brand) return null
+    const brandProducts = products.filter(p => String(p['品牌ID'] || '').trim() === String(brand['品牌ID'] || '').trim())
+    const preferred = brandProducts.find(p => truthy(p['是否推薦']) || truthy(p['是否精選']))
+    const ordered = preferred ? [preferred, ...brandProducts.filter(p => p !== preferred)] : brandProducts
+    for (const product of ordered) {
+      const item = itemFor(product)
+      if (item.image) return item
+    }
+    return ordered[0] ? itemFor(ordered[0]) : null
+  }
+
+  const heroItem = (() => {
+    const preferred = [...featured, ...products]
+    for (const product of preferred) {
+      const item = itemFor(product)
+      if (item.image) return item
+    }
+    return null
+  })()
+
+  const aboutItem = (() => {
+    const preferred = products.slice().reverse()
+    for (const product of preferred) {
+      const item = itemFor(product)
+      if (item.image) return item
+    }
+    return heroItem
+  })()
+  const phone=getSetting(safeData,'phone','0930-223-729'), line=getSetting(safeData,'line_url','#'), address=getSetting(safeData,'address','台中市東區十甲東路291號')
+
+  const path = locationPath
+  const productSlug = path.startsWith('/product/') ? decodeURIComponent(path.split('/')[2] || '') : ''
+  const brandIdFromPath = path.startsWith('/brands/') ? decodeURIComponent(path.split('/')[2] || '') : ''
+  const view = productSlug ? 'product' : brandIdFromPath ? 'brand' : path === '/brands' ? 'brands' : path === '/products' ? 'products' : path === '/about' ? 'about' : 'home'
+  const navigate = target => {
+    const routes = { home: '/', brands: '/brands', products: '/products', about: '/about' }
+    const next = routes[target] || target
+    window.history.pushState({}, '', `${import.meta.env.BASE_URL.replace(/\/$/, '')}${next}`)
+    setLocationPath(next)
+    window.scrollTo({top:0,behavior:'smooth'})
+  }
+  const goProducts = brandId => { setBrandFilter(brandId || 'all'); navigate('/products') }
+  const openBrand = b => navigate(`/brands/${encodeURIComponent(b['品牌ID'])}`)
+  const openProduct = p => navigate(`/product/${encodeURIComponent(p.slug)}`)
+  const currentBrand = brands.find(b => String(b['品牌ID']) === brandIdFromPath)
   const currentBrandKey = normalizeBrand(currentBrand?.['品牌名稱'])
   const currentBrandContent = BRAND_CONTENT[currentBrandKey] || {
     position: currentBrand?.['品牌類型'] || 'BRAND', motto: 'Discover Your Sound.', title: currentBrand?.['品牌名稱'], intro: currentBrand?.['品牌簡介'] || '探索品牌理念與目前上架商品。', highlights: []
   }
   const currentBrandProducts = currentBrand ? products.filter(p=>p['品牌ID']===currentBrand['品牌ID']).slice(0,4) : []
+  const currentProduct = productSlug ? products.find(p => p.slug === productSlug) : null
+  const currentProductItem = currentProduct ? itemFor(currentProduct) : null
+
+  useEffect(() => {
+    const base = 'https://guitarworkshop.github.io/guitar-workshop'
+    let title = '吉他工坊｜木吉他・電吉他・品牌吉他推薦'
+    let description = '吉他工坊提供木吉他選購、專業調整與 AI 選琴服務，探索 DADARWOOD、ANISA、ST.MATTHEW、DO ACOUSTIC 等品牌。'
+    const canonical = `${base}${locationPath === '/' ? '/' : locationPath}`
+    let image = ''
+
+    if (currentProductItem) {
+      const { product, brand, spec } = currentProductItem
+      title = `${product['型號']}｜${brand?.['品牌名稱'] || '吉他'}｜吉他工坊`
+      description = `${product['型號']}，${[spec?.['面板結構'], spec?.['面板木材'], spec?.['側背板木材']].filter(Boolean).join('・')}。出貨前由專業技師調整弦距與手感，完成檢測後出貨。`
+      image = currentProductItem.image || ''
+    } else if (currentBrand) {
+      title = `${currentBrand['品牌名稱']} 吉他｜品牌介紹與商品｜吉他工坊`
+      description = currentBrandContent.intro
+    } else if (view === 'products') {
+      title = '全部吉他商品｜木吉他・電吉他｜吉他工坊'
+      description = '瀏覽吉他工坊目前上架的吉他商品，依品牌、型號與需求快速選琴。'
+    }
+
+    document.title = title
+    const setMeta = (selector, attributes, value) => {
+      let element = document.head.querySelector(selector)
+      if (!element) {
+        element = document.createElement('meta')
+        Object.entries(attributes).forEach(([key, val]) => element.setAttribute(key, val))
+        document.head.appendChild(element)
+      }
+      element.setAttribute('content', value)
+    }
+    setMeta('meta[name="description"]', { name: 'description' }, description)
+    setMeta('meta[property="og:title"]', { property: 'og:title' }, title)
+    setMeta('meta[property="og:description"]', { property: 'og:description' }, description)
+    setMeta('meta[property="og:url"]', { property: 'og:url' }, canonical)
+    if (image) {
+      setMeta('meta[property="og:image"]', { property: 'og:image' }, image)
+      setMeta('meta[name="twitter:card"]', { name: 'twitter:card' }, 'summary_large_image')
+      setMeta('meta[name="twitter:image"]', { name: 'twitter:image' }, image)
+    }
+
+    let canonicalLink = document.head.querySelector('link[rel="canonical"]')
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link')
+      canonicalLink.rel = 'canonical'
+      document.head.appendChild(canonicalLink)
+    }
+    canonicalLink.href = canonical
+
+    document.getElementById('product-schema')?.remove()
+    if (currentProductItem) {
+      const { product, brand, spec } = currentProductItem
+      const schema = document.createElement('script')
+      schema.id = 'product-schema'
+      schema.type = 'application/ld+json'
+      schema.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product['型號'],
+        brand: { '@type': 'Brand', name: brand?.['品牌名稱'] || '' },
+        image: currentProductItem.images?.map(entry => entry.src) || (image ? [image] : undefined),
+        description,
+        sku: product['商品編號'] || product['商品ID'],
+        offers: parsePrice(product['售價']) != null ? {
+          '@type': 'Offer',
+          priceCurrency: 'TWD',
+          price: parsePrice(product['售價']),
+          availability: 'https://schema.org/InStock',
+          url: canonical
+        } : undefined,
+        additionalProperty: Object.entries(spec || {})
+          .filter(([key, value]) => value && !['商品ID', '型號'].includes(key))
+          .map(([name, value]) => ({ '@type': 'PropertyValue', name, value }))
+      })
+      document.head.appendChild(schema)
+    }
+  }, [locationPath, view, currentBrand, currentBrandContent.intro, currentProductItem])
+
+  if (!data) return <div className="loading"><GuitarArt compact/><p>正在載入吉他工坊...</p></div>
 
   return <><Header view={view} navigate={navigate} onOpenAdvisor={()=>setAdvisor(true)}/><main>
     {view === 'home' && <>
-      <section className="hero apple-hero"><div className="hero-copy"><p className="eyebrow">GUITAR WORKSHOP</p><h1><span>從第一把吉他</span><span>到陪伴一生的那一把</span></h1><span className="hero-rule" aria-hidden="true"></span><p>每一位演奏者，都值得找到真正適合自己的吉他。</p><div className="hero-actions"><button className="primary" onClick={()=>navigate('brands')}>探索品牌</button><button className="link-button" onClick={()=>setAdvisor(true)}>AI 選琴 <span aria-hidden="true">→</span></button></div></div><div className="hero-art"><GuitarArt/></div></section>
+      <section className="hero apple-hero"><div className="hero-copy"><p className="eyebrow">GUITAR WORKSHOP</p><h1><span>從第一把吉他</span><span>到陪伴一生的那一把</span></h1><span className="hero-rule" aria-hidden="true"></span><p>每一位演奏者，都值得找到真正適合自己的吉他。</p><div className="hero-actions"><button className="primary" onClick={()=>navigate('brands')}>探索品牌</button><button className="link-button" onClick={()=>setAdvisor(true)}>AI 選琴 <span aria-hidden="true">→</span></button></div></div><div className="hero-art">{heroItem?.image ? <img src={heroItem.image} alt={`${heroItem.brand?.['品牌名稱'] || '吉他工坊'} ${heroItem.product?.['型號'] || '精選吉他'}`} className="hero-product-image"/> : <GuitarArt/>}</div></section>
       <section className="hero-benefits" aria-label="吉他工坊服務特色"><article><span className="benefit-icon" aria-hidden="true">材</span><div><h3>嚴選材料</h3><p>精選優質木材<br/>成就穩定好聲音</p></div></article><article><span className="benefit-icon" aria-hidden="true">調</span><div><h3>專業調整</h3><p>出貨前技師調整<br/>弦距與手感</p></div></article><article><span className="benefit-icon" aria-hidden="true">檢</span><div><h3>品質檢測</h3><p>完整檢測流程<br/>確認最佳狀態</p></div></article><article><span className="benefit-icon" aria-hidden="true">伴</span><div><h3>音樂陪伴</h3><p>從練習到舞台<br/>陪伴每個時刻</p></div></article></section>
 
       <section className="brand-showcase">{brands.slice(0,4).map((b,i)=>{
         const key=normalizeBrand(b['品牌名稱']), c=BRAND_CONTENT[key]
-        return <article className={`brand-panel panel-${i+1}`} key={b['品牌ID']}><div><p className="eyebrow">{c?.position || 'COLLECTION'}</p><h2>{b['品牌名稱']}</h2><p className="brand-motto">{c?.motto || b['品牌簡介']}</p><button className="link-button" onClick={()=>openBrand(b)}>探索品牌 ›</button></div><GuitarArt compact/></article>
+        const representative = representativeItemForBrand(b)
+        return <article className={`brand-panel panel-${i+1}`} key={b['品牌ID']}><div><p className="eyebrow">{c?.position || 'COLLECTION'}</p><h2>{b['品牌名稱']}</h2><p className="brand-motto">{c?.motto || b['品牌簡介']}</p><button className="link-button" onClick={()=>openBrand(b)}>探索品牌 ›</button></div>{representative?.image ? <img src={representative.image} alt={`${b['品牌名稱']} ${representative.product?.['型號'] || '代表商品'}`} className="brand-panel-image"/> : <GuitarArt compact/>}</article>
       })}</section>
 
-      <section className="section featured-home"><div className="center-head"><p className="eyebrow">FEATURED MODELS</p><h2>精選推薦</h2></div><div className="featured-grid">{featured.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>setSelected(itemFor(p))}/>)}</div><div className="center-action"><button className="link-button dark" onClick={()=>goProducts()}>依分類瀏覽商品 ›</button></div></section>
+      <section className="section featured-home"><div className="center-head"><p className="eyebrow">FEATURED MODELS</p><h2>精選推薦</h2></div><div className="featured-grid">{featured.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>openProduct(p)}/>)}</div><div className="center-action"><button className="link-button dark" onClick={()=>goProducts()}>依分類瀏覽商品 ›</button></div></section>
 
       <section className="advisor-hero"><div><p className="eyebrow">GUITAR ADVISOR</p><h2>不知道從哪一把開始？</h2><p>告訴我們預算、程度與用途，快速取得三個建議。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始選琴</button></div><div className="advisor-orb">AI</div></section>
 
 
     </>}
 
-    {view === 'brands' && <section className="page-shell"><div className="page-title"><p className="eyebrow">OUR BRANDS</p><h1>探索品牌</h1></div><div className="brand-page-grid">{brands.map((b,i)=>{const c=BRAND_CONTENT[normalizeBrand(b['品牌名稱'])]; return <article key={b['品牌ID']}><div className="brand-page-art"><GuitarArt compact/></div><p className="eyebrow">{c?.position || `0${i+1}`}</p><h2>{b['品牌名稱']}</h2><p className="brand-motto-dark">{c?.motto || b['品牌簡介']}</p><button className="link-button dark" onClick={()=>openBrand(b)}>閱讀品牌故事 ›</button></article>})}</div></section>}
+    {view === 'brands' && <section className="page-shell"><div className="page-title"><p className="eyebrow">OUR BRANDS</p><h1>探索品牌</h1></div><div className="brand-page-grid">{brands.map((b,i)=>{const c=BRAND_CONTENT[normalizeBrand(b['品牌名稱'])]; const representative=representativeItemForBrand(b); return <article key={b['品牌ID']}><div className="brand-page-art">{representative?.image ? <img src={representative.image} alt={`${b['品牌名稱']} ${representative.product?.['型號'] || '代表商品'}`} className="brand-page-image"/> : <GuitarArt compact/>}</div><p className="eyebrow">{c?.position || `0${i+1}`}</p><h2>{b['品牌名稱']}</h2><p className="brand-motto-dark">{c?.motto || b['品牌簡介']}</p><button className="link-button dark" onClick={()=>openBrand(b)}>閱讀品牌故事 ›</button></article>})}</div></section>}
 
     {view === 'brand' && currentBrand && <>
-      <section className="brand-detail-hero"><div><p className="eyebrow">{currentBrandContent.position}</p><h1>{currentBrand['品牌名稱']}</h1><h2>{currentBrandContent.title}</h2><p>{currentBrandContent.intro}</p><div className="hero-actions left"><button className="primary" onClick={()=>goProducts(currentBrand['品牌ID'])}>查看目前商品</button><button className="link-button" onClick={()=>navigate('brands')}>返回品牌 ›</button></div></div><div className="brand-detail-art"><GuitarArt/></div></section>
+      <section className="brand-detail-hero"><div><p className="eyebrow">{currentBrandContent.position}</p><h1>{currentBrand['品牌名稱']}</h1><h2>{currentBrandContent.title}</h2><p>{currentBrandContent.intro}</p><div className="hero-actions left"><button className="primary" onClick={()=>goProducts(currentBrand['品牌ID'])}>查看目前商品</button><button className="link-button" onClick={()=>navigate('brands')}>返回品牌 ›</button></div></div><div className="brand-detail-art">{representativeItemForBrand(currentBrand)?.image ? <img src={representativeItemForBrand(currentBrand).image} alt={`${currentBrand['品牌名稱']} ${representativeItemForBrand(currentBrand).product?.['型號'] || '代表商品'}`} className="brand-detail-image"/> : <GuitarArt/>}</div></section>
       <section className="brand-philosophy"><p className="brand-quote">“{currentBrandContent.motto}”</p><div className="philosophy-grid">{currentBrandContent.highlights.map(([title,copy],i)=><article key={title}><span>0{i+1}</span><h3>{title}</h3><p>{copy}</p></article>)}</div></section>
-      <section className="section brand-products"><div className="center-head"><p className="eyebrow">CURRENT COLLECTION</p><h2>目前上架商品</h2></div><div className="featured-grid">{currentBrandProducts.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>setSelected(itemFor(p))}/>)}</div><div className="center-action"><button className="link-button dark" onClick={()=>goProducts(currentBrand['品牌ID'])}>查看全部 ›</button></div></section>
+      <section className="section brand-products"><div className="center-head"><p className="eyebrow">CURRENT COLLECTION</p><h2>目前上架商品</h2></div><div className="featured-grid">{currentBrandProducts.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>openProduct(p)}/>)}</div><div className="center-action"><button className="link-button dark" onClick={()=>goProducts(currentBrand['品牌ID'])}>查看全部 ›</button></div></section>
     </>}
 
-    {view === 'products' && <section className="page-shell products-page"><div className="page-title split"><div><p className="eyebrow">PRODUCTS</p><h1>全部商品</h1></div><div className="filters"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="搜尋型號..."/><select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)}><option value="all">全部品牌</option>{brands.map(b=><option key={b['品牌ID']} value={b['品牌ID']}>{b['品牌名稱']}</option>)}</select></div></div><div className="category-strip"><button className={brandFilter==='all'?'active':''} onClick={()=>setBrandFilter('all')}>全部</button>{brands.map(b=><button key={b['品牌ID']} className={brandFilter===b['品牌ID']?'active':''} onClick={()=>setBrandFilter(b['品牌ID'])}>{b['品牌名稱']}</button>)}</div><div className="product-grid">{filtered.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>setSelected(itemFor(p))}/>)}</div>{!filtered.length&&<p className="empty">目前沒有符合條件的商品。</p>}</section>}
+    {view === 'products' && <section className="page-shell products-page"><div className="page-title split"><div><p className="eyebrow">PRODUCTS</p><h1>全部商品</h1></div><div className="filters"><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="搜尋型號..."/><select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)}><option value="all">全部品牌</option>{brands.map(b=><option key={b['品牌ID']} value={b['品牌ID']}>{b['品牌名稱']}</option>)}</select></div></div><div className="category-strip"><button className={brandFilter==='all'?'active':''} onClick={()=>setBrandFilter('all')}>全部</button>{brands.map(b=><button key={b['品牌ID']} className={brandFilter===b['品牌ID']?'active':''} onClick={()=>setBrandFilter(b['品牌ID'])}>{b['品牌名稱']}</button>)}</div><div className="product-grid">{filtered.map(p=><ProductCard key={p['商品ID']} item={itemFor(p)} onClick={()=>openProduct(p)}/>)}</div>{!filtered.length&&<p className="empty">目前沒有符合條件的商品。</p>}</section>}
 
-    {view === 'about' && <section className="page-shell about-page"><div className="page-title"><p className="eyebrow">ABOUT GUITAR WORKSHOP</p><h1>吉他不只是規格，<br/>更重要的是手感與聲音。</h1></div><div className="about-grid"><div className="about-art"><GuitarArt/></div><div><p>吉他工坊提供木吉他與相關樂器的銷售、選琴諮詢及出貨前調整。我們不只比較品牌，而是從預算、材料、桶身與演奏需求，協助你選到真正適合長期使用的樂器。</p><p>所有上架商品以 Google Sheets 作為主要資料來源，品牌故事與技術內容則以實際型錄、產品資料與我們的品牌定位為基礎。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始 AI 選琴</button></div></div></section>}
+    {view === 'product' && (currentProductItem ? <ProductDetail item={currentProductItem} onBack={()=>navigate('/products')}/> : <section className="page-shell"><div className="page-title"><p className="eyebrow">PRODUCT NOT FOUND</p><h1>找不到這項商品</h1><button className="primary" onClick={()=>navigate('/products')}>返回全部商品</button></div></section>)}
+
+    {view === 'about' && <section className="page-shell about-page"><div className="page-title"><p className="eyebrow">ABOUT GUITAR WORKSHOP</p><h1>吉他不只是規格，<br/>更重要的是手感與聲音。</h1></div><div className="about-grid"><div className="about-art">{aboutItem?.image ? <img src={aboutItem.image} alt={`${aboutItem.brand?.['品牌名稱'] || '吉他工坊'} ${aboutItem.product?.['型號'] || '精選吉他'}`} className="about-product-image"/> : <GuitarArt/>}</div><div><p>吉他工坊提供木吉他與相關樂器的銷售、選琴諮詢及出貨前調整。我們不只比較品牌，而是從預算、材料、桶身與演奏需求，協助你選到真正適合長期使用的樂器。</p><p>所有上架商品以 Google Sheets 作為主要資料來源，品牌故事與技術內容則以實際型錄、產品資料與我們的品牌定位為基礎。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始 AI 選琴</button></div></div></section>}
   </main>
 
   <section className="contact" id="contact"><div><p className="eyebrow">CONTACT</p><h2>來吉他工坊，<br/>找到適合你的琴。</h2></div><div className="contact-links"><a href={`tel:${phone}`}><span>電話</span><small>{phone}</small></a><a href={line}><span>LINE</span><small>加入好友</small></a><a href={`https://maps.google.com/?q=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer"><span>門市</span><small>{address}</small></a></div></section>
   <footer><span>© 2026 Guitar Workshop</span><span>台中｜吉他銷售・調整・選琴諮詢</span></footer>
-  {selected && <ProductModal item={selected} onClose={()=>setSelected(null)}/>} {advisor && <Advisor data={data} onClose={()=>setAdvisor(false)} onPick={p=>{setAdvisor(false);setSelected(itemFor(p))}}/>}
+  {advisor && <Advisor data={data} onClose={()=>setAdvisor(false)} onPick={p=>{setAdvisor(false);openProduct(p)}}/>}
   </>
 }
