@@ -14,6 +14,10 @@ const money = value => {
   return number == null ? '價格洽詢' : `NT$ ${number.toLocaleString('zh-TW')}`
 }
 const getSetting = (data, id, fallback = '') => data?.settings?.find(x => x['設定ID'] === id)?.['設定值'] || fallback
+const isPublished = product =>
+  product?.['Published'] !== ''
+    ? truthy(product?.['Published'])
+    : truthy(product?.['是否上架'])
 
 const BRAND_CONTENT = {
   DADARWOOD: {
@@ -292,7 +296,7 @@ export default function App() {
   }, [])
   const safeData = data || { brands: [], products: [], specs: [], ai: [], photos: [], features: [], settings: [] }
   const brands = safeData.brands.filter(b => truthy(b['是否顯示']))
-  const products = safeData.products.filter(p => truthy(p['是否上架']))
+  const products = safeData.products.filter(isPublished)
   const itemFor = p => {
     const clean = value => String(value ?? '').trim()
     const normalizeModel = value => clean(value).toUpperCase().replace(/\s+/g, ' ').replace(/[–—]/g, '-')
@@ -397,8 +401,8 @@ export default function App() {
 
     if (currentProductItem) {
       const { product, brand, spec } = currentProductItem
-      title = `${product['型號']}｜${brand?.['品牌名稱'] || '吉他'}｜吉他工坊`
-      description = `${product['型號']}，${[spec?.['面板結構'], spec?.['面板木材'], spec?.['側背板木材']].filter(Boolean).join('・')}。出貨前由專業技師調整弦距與手感，完成檢測後出貨。`
+      title = product['SEO_Title'] || `${product['型號']}｜${brand?.['品牌名稱'] || '吉他'}｜吉他工坊`
+      description = product['SEO_Description'] || `${product['型號']}，${[spec?.['面板結構'], spec?.['面板木材'], spec?.['側背板木材']].filter(Boolean).join('・')}。出貨前由專業技師調整弦距與手感，完成檢測後出貨。`
       image = currentProductItem.image || ''
     } else if (currentBrand) {
       title = `${currentBrand['品牌名稱']} 吉他｜品牌介紹與商品｜吉他工坊`
@@ -436,13 +440,34 @@ export default function App() {
     }
     canonicalLink.href = canonical
 
-    document.getElementById('product-schema')?.remove()
+    document.getElementById('page-schema')?.remove()
+    const pageSchema = document.createElement('script')
+    pageSchema.id = 'page-schema'
+    pageSchema.type = 'application/ld+json'
+    const schemas = [{
+      '@context': 'https://schema.org',
+      '@type': 'LocalBusiness',
+      '@id': `${base}/#business`,
+      name: '吉他工坊',
+      url: `${base}/`,
+      telephone: phone,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: address,
+        addressLocality: '台中市',
+        addressCountry: 'TW'
+      }
+    }, {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      '@id': `${base}/#website`,
+      name: '吉他工坊',
+      url: `${base}/`,
+      inLanguage: 'zh-Hant-TW'
+    }]
     if (currentProductItem) {
       const { product, brand, spec } = currentProductItem
-      const schema = document.createElement('script')
-      schema.id = 'product-schema'
-      schema.type = 'application/ld+json'
-      schema.textContent = JSON.stringify({
+      schemas.push({
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: product['型號'],
@@ -454,15 +479,26 @@ export default function App() {
           '@type': 'Offer',
           priceCurrency: 'TWD',
           price: parsePrice(product['售價']),
-          availability: 'https://schema.org/InStock',
+          availability: String(product['庫存狀態'] || '').includes('缺貨')
+            ? 'https://schema.org/OutOfStock'
+            : 'https://schema.org/InStock',
           url: canonical
         } : undefined,
         additionalProperty: Object.entries(spec || {})
           .filter(([key, value]) => value && !['商品ID', '型號'].includes(key))
           .map(([name, value]) => ({ '@type': 'PropertyValue', name, value }))
+      }, {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '首頁', item: `${base}/` },
+          { '@type': 'ListItem', position: 2, name: '全部商品', item: `${base}/products` },
+          { '@type': 'ListItem', position: 3, name: product['型號'], item: canonical }
+        ]
       })
-      document.head.appendChild(schema)
     }
+    pageSchema.textContent = JSON.stringify(schemas)
+    document.head.appendChild(pageSchema)
   }, [locationPath, view, currentBrand, currentBrandContent.intro, currentProductItem])
 
   if (!data) return <div className="loading"><GuitarArt compact/><p>正在載入吉他工坊...</p></div>

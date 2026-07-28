@@ -28,6 +28,7 @@ function driveToImage(url) {
 
 const KNOWN_HEADERS = [
   '商品ID','品牌ID','系列ID','型號','商品編號','售價','庫存狀態','是否上架','是否新品','是否推薦','是否停產','商品排序','建立日期','網址代號','備註','資料狀態','蝦皮網址','是否首頁Hero','Hero排序','是否精選',
+  'Slug','SEO_Title','SEO_Description','Published',
   '尺寸(吋)','桶身','缺角','面板結構','面板木材','側背板結構','側背板木材','琴頸','指板','琴橋','漆面','拾音器','弦長(mm)','上枕寬(mm)','弦鈕','其他規格',
   '照片ID','顏色ID','照片類型','照片名稱','GoogleDrive連結','排序','網站顯示','海報可用','AI動畫可用',
   '特色ID','特色名稱','特色說明','是否顯示','圖示代號',
@@ -178,10 +179,9 @@ function repairRelations(data) {
       商品ID: clean(p['商品ID']),
       型號: clean(p['型號']),
       slug:
-        clean(p.slug) ||
+        clean(p['Slug']) ||
         slugify(
           p['網址代號'] ||
-          p['Slug'] ||
           p['型號'] ||
           p['商品ID']
         )
