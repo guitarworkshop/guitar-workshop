@@ -11,11 +11,23 @@ const clean = value => String(value ?? '').trim()
 const truthy = value => ['是', 'true', '1', 'yes', 'y'].includes(clean(value).toLowerCase())
 const slugify = value => clean(value).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'product'
 const escapeHtml = value => clean(value).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+const normalizeModel = value => clean(value).toUpperCase().replace(/\s+/g, ' ').replace(/[–—]/g, '-')
+const driveToImage = url => {
+  const value = clean(url)
+  if (!value) return ''
+  const fileId = [
+    /\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+    /\/d\/([a-zA-Z0-9_-]+)/
+  ].map(pattern => value.match(pattern)?.[1]).find(Boolean)
+  return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w2000` : value
+}
 const knownHeaders = [
   '商品ID', '品牌ID', '系列ID', '型號', '商品編號', '售價', '庫存狀態', '是否上架',
   '網址代號', 'Slug', 'SEO_Title', 'SEO_Description', 'Published',
   '品牌名稱', '品牌介紹', '品牌簡介', '是否顯示',
-  '面板結構', '面板木材', '側背板木材'
+  '面板結構', '面板木材', '側背板木材',
+  '照片ID', '照片類型', 'GoogleDrive連結', '排序', '網站顯示'
 ]
 const canonicalHeader = value => {
   const header = clean(value)
@@ -47,12 +59,13 @@ async function fetchSheet(name) {
 
 let data = fallback
 try {
-  const [brands, products, specs] = await Promise.all([
+  const [brands, products, specs, photos] = await Promise.all([
     fetchSheet('01_品牌'),
     fetchSheet('03_商品'),
-    fetchSheet('04_規格')
+    fetchSheet('04_規格'),
+    fetchSheet('06_照片')
   ])
-  data = { ...fallback, brands, products, specs }
+  data = { ...fallback, brands, products, specs, photos }
   console.log(`SEO data: Google Sheets (${products.length} products)`)
 } catch (error) {
   console.warn(`SEO data fallback: ${error.message}`)
@@ -69,6 +82,22 @@ const products = (data.products || [])
 
 const brandById = new Map(brands.map(brand => [clean(brand['品牌ID']), brand]))
 const specByProductId = new Map((data.specs || []).map(spec => [clean(spec['商品ID']), spec]))
+const photos = (data.photos || [])
+  .filter(photo => !photo['網站顯示'] || truthy(photo['網站顯示']))
+  .map(photo => ({ ...photo, image: driveToImage(photo['GoogleDrive連結']) }))
+  .filter(photo => photo.image)
+  .sort((a, b) => Number(a['排序'] || 9999) - Number(b['排序'] || 9999))
+
+function productImages(product) {
+  const productId = clean(product['商品ID'])
+  const model = normalizeModel(product['型號'])
+  return [...new Set(photos
+    .filter(photo =>
+      (productId && clean(photo['商品ID']) === productId) ||
+      (model && normalizeModel(photo['型號']) === model)
+    )
+    .map(photo => photo.image))]
+}
 
 const merchantReturnPolicy = {
   '@type': 'MerchantReturnPolicy',
@@ -106,7 +135,7 @@ function updateTag(html, pattern, replacement) {
   return pattern.test(html) ? html.replace(pattern, replacement) : html.replace('</head>', `    ${replacement}\n  </head>`)
 }
 
-function pageHtml({ title, description, canonical, schema }) {
+function pageHtml({ title, description, canonical, schema, image }) {
   let html = template
   html = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
   html = updateTag(html, /<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${escapeHtml(description)}" />`)
@@ -114,6 +143,11 @@ function pageHtml({ title, description, canonical, schema }) {
   html = updateTag(html, /<meta\s+property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`)
   html = updateTag(html, /<meta\s+property="og:url"[^>]*>/i, `<meta property="og:url" content="${escapeHtml(canonical)}" />`)
   html = updateTag(html, /<link\s+rel="canonical"[^>]*>/i, `<link rel="canonical" href="${escapeHtml(canonical)}" />`)
+  if (image) {
+    html = updateTag(html, /<meta\s+property="og:image"[^>]*>/i, `<meta property="og:image" content="${escapeHtml(image)}" />`)
+    html = updateTag(html, /<meta\s+name="twitter:card"[^>]*>/i, '<meta name="twitter:card" content="summary_large_image" />')
+    html = updateTag(html, /<meta\s+name="twitter:image"[^>]*>/i, `<meta name="twitter:image" content="${escapeHtml(image)}" />`)
+  }
   if (schema) html = html.replace('</head>', `    <script type="application/ld+json">${JSON.stringify(schema).replaceAll('<', '\\u003c')}</script>\n  </head>`)
   return html
 }
@@ -192,12 +226,14 @@ for (const product of products) {
   const canonical = `${base}${route}`
   routes.push(route)
   const price = Number(String(product['售價'] || '').replace(/[^0-9.-]/g, ''))
+  const images = productImages(product)
   const schema = [{
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: `${brandName} ${product['型號']}`,
     brand: { '@type': 'Brand', name: brandName },
     description,
+    image: images.length ? images : undefined,
     sku: product['商品編號'] || product['商品ID'],
     offers: Number.isFinite(price) && price > 0 ? {
       '@type': 'Offer',
@@ -219,7 +255,7 @@ for (const product of products) {
       { '@type': 'ListItem', position: 3, name: product['型號'], item: canonical }
     ]
   }]
-  await writeRoute(route, { title, description, canonical, schema })
+  await writeRoute(route, { title, description, canonical, schema, image: images[0] })
 }
 
 const today = new Date().toISOString().slice(0, 10)
