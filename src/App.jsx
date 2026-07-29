@@ -164,9 +164,17 @@ const articleFromRow = row => ({
 function KnowledgeIndex({ articles, onOpenArticle }) {
   return <section className="page-shell knowledge-page">
     <div className="page-title knowledge-title"><p className="eyebrow">GUITAR GUIDE</p><h1>選琴知識</h1><p className="page-intro">不只看規格，從預算、材質與實際演奏需求，找到真正適合你的吉他。</p></div>
-    <div className="knowledge-grid">{articles.map(article => <article className="knowledge-card" key={article.slug}>
+    <div className="knowledge-grid">{articles.map(article => <article className="knowledge-card" key={article.slug} role="link" tabIndex={0} onClick={() => onOpenArticle(article.slug)} onKeyDown={event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        onOpenArticle(article.slug)
+      }
+    }}>
       <div className="knowledge-card-visual" aria-hidden="true">{article.image ? <img src={article.image} alt=""/> : <><span>GW</span><b>選琴指南</b></>}</div>
-      <div className="knowledge-card-copy"><p className="eyebrow">{article.category}</p><h2>{article.title}</h2><p>{article.excerpt}</p><div className="knowledge-meta"><span>更新：{article.updated}</span><span>{article.readTime}</span></div><button className="knowledge-link" onClick={() => onOpenArticle(article.slug)}>閱讀完整文章 <span>→</span></button></div>
+      <div className="knowledge-card-copy"><p className="eyebrow">{article.category}</p><h2>{article.title}</h2><p>{article.excerpt}</p><div className="knowledge-meta"><span>更新：{article.updated}</span><span>{article.readTime}</span></div><button type="button" className="knowledge-link" onClick={event => {
+        event.stopPropagation()
+        onOpenArticle(article.slug)
+      }}>閱讀完整文章 <span>→</span></button></div>
     </article>)}</div>
   </section>
 }
@@ -704,7 +712,7 @@ export default function App() {
 
       <section className="advisor-hero"><div><p className="eyebrow">GUITAR ADVISOR</p><h2>不知道從哪一把開始？</h2><p>告訴我們預算、程度與用途，快速取得三個建議。</p><button className="primary" onClick={()=>setAdvisor(true)}>開始選琴</button></div><div className="advisor-orb">AI</div></section>
 
-      {articles[0] && <section className="section knowledge-home"><div className="center-head"><p className="eyebrow">GUITAR GUIDE</p><h2>第一次選琴，先看懂差異</h2><p>從材質與預算開始，少走一次不必要的升級路。</p></div><button className="knowledge-feature" onClick={()=>navigate(`/knowledge/${articles[0].slug}`)}><span><small>{articles[0].category}・{articles[0].readTime}</small><b>{articles[0].title}</b></span><em>閱讀指南 →</em></button></section>}
+      {articles[0] && <section className="section knowledge-home"><div className="center-head"><p className="eyebrow">GUITAR GUIDE</p><h2>選琴知識</h2><p>從材質、尺寸與預算開始，找到真正適合自己的吉他。</p></div><button type="button" className="knowledge-feature" onClick={()=>navigate(`/knowledge/${articles[0].slug}`)} aria-label={`閱讀文章：${articles[0].title}`}><span><small>最新文章・{articles[0].category}・{articles[0].readTime}</small><b>{articles[0].title}</b></span><em>閱讀文章 →</em></button><div className="knowledge-home-action"><button type="button" className="link-button dark" onClick={()=>navigate('knowledge')}>查看全部選琴文章 →</button></div></section>}
     </>}
 
     {view === 'brands' && <section className="page-shell brands-page"><div className="page-title"><p className="eyebrow">OUR BRANDS</p><h1>探索品牌</h1><p className="page-intro">四種聲音性格，找到與你最契合的那一把。</p></div><div className="brand-page-grid">{brands.map((b,i)=>{const c=BRAND_CONTENT[normalizeBrand(b['品牌名稱'])]; return <article className="brand-story-card" key={b['品牌ID']} style={{'--brand-image': `url("${brandImage(b['品牌名稱'])}")`}}><div className="brand-story-copy"><p className="eyebrow">{c?.position || `0${i+1}`}</p><h2>{b['品牌名稱']}</h2><p>{c?.motto || b['品牌簡介']}</p><button className="brand-cta" onClick={()=>openBrand(b)}>閱讀品牌故事 <span aria-hidden="true">→</span></button></div></article>})}</div></section>}
