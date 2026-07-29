@@ -220,7 +220,7 @@ function MarkdownArticle({ body }) {
 function SheetKnowledgeArticle({ article, onBack, onProducts, onAdvisor }) {
   return <article className="guide-article">
     <header className="guide-hero"><button className="product-back" onClick={onBack}>← 返回選琴知識</button><p className="eyebrow">{article.category}</p><h1>{article.title}</h1><p className="guide-lead">{article.excerpt}</p><div className="knowledge-meta"><span>吉他工坊編輯</span><span>更新於 {article.updated}</span><span>{article.readTime}</span></div></header>
-    <div className="guide-layout"><aside className="guide-summary"><p className="eyebrow">GUITAR GUIDE</p><h2>選琴知識</h2><p>從預算、材質與實際演奏需求，找到真正適合你的吉他。</p></aside><div className="guide-content"><MarkdownArticle body={article.body}/><section className="guide-cta"><p className="eyebrow">NEXT STEP</p><h2>還是不確定哪一把適合你？</h2><p>告訴我們預算、程度與主要用途，先從目前商品中縮小範圍。</p><div className="hero-actions left"><button className="primary" onClick={onAdvisor}>使用 AI 選琴</button><button className="link-button dark" onClick={onProducts}>查看全部商品 →</button></div></section></div></div>
+    <div className="guide-layout"><button type="button" className="guide-summary guide-summary-link" onClick={onBack} aria-label="查看所有選琴知識文章"><p className="eyebrow">GUITAR GUIDE</p><h2>選琴知識</h2><p>從預算、材質與實際演奏需求，找到真正適合你的吉他。</p><span>查看所有文章 →</span></button><div className="guide-content"><MarkdownArticle body={article.body}/><section className="guide-cta"><p className="eyebrow">NEXT STEP</p><h2>還是不確定哪一把適合你？</h2><p>告訴我們預算、程度與主要用途，先從目前商品中縮小範圍。</p><div className="hero-actions left"><button className="primary" onClick={onAdvisor}>使用 AI 選琴</button><button className="link-button dark" onClick={onProducts}>查看全部商品 →</button></div></section></div></div>
   </article>
 }
 
