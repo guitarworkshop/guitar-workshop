@@ -257,6 +257,18 @@ function getYouTubeId(value) {
   return match?.[1] || ''
 }
 
+function getExternalHttpUrl(value) {
+  const url = String(value || '').trim()
+  if (!url) return ''
+
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : ''
+  } catch {
+    return ''
+  }
+}
+
 function ProductDetail({ item, onBack }) {
   const { product, brand, spec, features } = item
   const fields = ['尺寸(吋)','桶身','缺角','面板結構','面板木材','側背板結構','側背板木材','琴頸','指板','琴橋','漆面','拾音器']
@@ -320,6 +332,7 @@ function ProductDetail({ item, onBack }) {
     spec?.['YouTube網址'], spec?.['影片網址'], spec?.['試聽網址']
   ].find(Boolean) || ''
   const youtubeId = getYouTubeId(videoUrl)
+  const shopeeUrl = getExternalHttpUrl(product['蝦皮網址'])
 
   return <section className="product-detail-page">
     <button className="product-back" onClick={onBack}>← 返回全部商品</button>
@@ -390,7 +403,10 @@ function ProductDetail({ item, onBack }) {
             <div><dt>退貨申請</dt><dd>收到商品後 7 天內可提出申請；非商品瑕疵退貨，退回運費由買家負擔。</dd></div>
           </dl>
         </section>
-        <a className="primary full" href="#contact">洽詢這把吉他</a>
+        <div className="product-actions">
+          {shopeeUrl && <a className="shopee-button" href={shopeeUrl} target="_blank" rel="noopener noreferrer">前往蝦皮購買 <span aria-hidden="true">↗</span></a>}
+          <a className="primary" href="#contact">洽詢這把吉他</a>
+        </div>
       </div>
     </div>
 

@@ -24,6 +24,10 @@
 @media(max-width:720px){.product-gallery .product-detail-art{min-height:380px}.product-thumbnails button{flex-basis:76px}.product-thumbnails img{height:62px}.gallery-arrow{width:38px;height:38px;font-size:28px}.gallery-arrow.previous{left:10px}.gallery-arrow.next{right:10px}.gallery-mobile-tip{display:block}.image-lightbox{padding:58px 18px}.image-lightbox img{max-width:96vw;max-height:78vh}.lightbox-arrow{width:42px;height:58px;font-size:38px;background:rgba(255,255,255,.14)}.lightbox-arrow.previous{left:6px}.lightbox-arrow.next{right:6px}.lightbox-close{right:10px;top:8px}}
 @media(hover:none){.product-detail-art.is-zooming .gallery-main-button .product-image-large{transform:none}}
 
+/* Product purchase actions */
+.product-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:25px}.product-actions a{display:flex;min-height:52px;align-items:center;justify-content:center;text-align:center;text-decoration:none}.shopee-button{gap:7px;border-radius:999px;padding:13px 24px;background:#ee4d2d;color:#fff;font-weight:700;transition:background .22s,transform .22s}.shopee-button:hover{background:#d93f22;transform:translateY(-1px)}.shopee-button:focus-visible,.product-actions .primary:focus-visible{outline:3px solid rgba(238,77,45,.28);outline-offset:3px}
+@media(max-width:720px){.product-actions{grid-template-columns:1fr}.product-actions a{width:100%}}
+
 /* V4: 使用 Google Sheets 商品實拍圖取代示意 SVG */
 .hero-product-image,.brand-panel-image,.brand-page-image,.brand-detail-image,.about-product-image{display:block;max-width:100%;object-fit:contain;filter:drop-shadow(0 28px 44px rgba(48,28,16,.2));user-select:none;-webkit-user-drag:none}
 .hero-product-image{width:min(520px,92%);height:650px;object-position:center bottom;transform:translateY(42px)}
